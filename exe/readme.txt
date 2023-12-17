@@ -8,7 +8,7 @@ pip install PLY
 还需安装对应版本的llvmlite，具体方式见report.pdf
 
 运行方式：
-在根目录下运行： python src/lexer.py exe/helloworld.cpp
+要分析helloworld.cpp，则在根目录下运行： python src/lexer.py exe/helloworld.cpp
 
 程序将输出token流，可以用定向符把它存储到文本文件中：
 
