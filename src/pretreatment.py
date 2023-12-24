@@ -18,7 +18,8 @@ class Pretreatment:
     
     def Pretreatment(self,filename):
         filedir=os.path.dirname(filename)
-        filename=os.path.join(filedir,filename)
+        nameoffile = filename.split('/')[-1]
+        filename=os.path.join(filedir,nameoffile)
         self.includes[filename]="not_yet_processed"
         done=False
         while not done:
@@ -130,5 +131,3 @@ class Pretreatment:
     
         
         
-                        
-            
