@@ -1,7 +1,8 @@
-import re
-
 import ply.lex as lex
 from ply.lex import TOKEN
+import sys
+from pretreatment import Pretreatment
+
 
 tokens = (
     'IDENTIFIER',
@@ -199,27 +200,24 @@ def t_COMMENT2(t):
 
 lexer = lex.lex()
 
-
 if __name__ == '__main__':
-    import sys
-    from preprocess import preprocess
 
-    if len(sys.argv) > 1:  
+    if len(sys.argv) > 1:  # specify file
         try:
-            file_data, ok = preprocess(sys.argv[1])
+            pretreatmenter=Pretreatment()
+            file_data, ok=pretreatmenter.Pretreatment(sys.argv[1])
+            
             if ok is not True:
-                print('preprocess error:', file_data)
+                print('Pretreatment error with file:', file_data)
             else:
                 lexer.input(file_data)
-                # 从左向右匹配
-                while 1:
+                while True:
                     token = lexer.token()
                     if not token:
-                        break  
+                        break  # not input
                     print(token)
         except Exception as e:
             print(e)
     else:
         print("please input c++ file path")
-
 
