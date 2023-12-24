@@ -206,6 +206,7 @@ if __name__ == '__main__':
         try:
             pretreatmenter=Pretreatment()
             file_data, ok=pretreatmenter.Pretreatment(sys.argv[1])
+            print(f'file_data: {file_data}')
             
             if ok is not True:
                 print('Pretreatment error with file:', file_data)
