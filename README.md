@@ -28,13 +28,13 @@ pip install PLY
 + 词法分析：对需要翻译的C++语言文件`test.cpp`，运行以下命令
 
 ``` bash
-python src/lex.py test.cpp
+python src/lexer.py exe/test.cpp
 ```
 
 程序将输出token流，可以用定向符把它存储到文本文件中：
 
 ``` bash
-python src/lex.py test.cpp > token_test.txt
+python src/lexer.py exe/test.cpp > token_test.txt
 ```
 ## 支持的功能
 
