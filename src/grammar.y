@@ -40,22 +40,23 @@ binary_expression   : cast_expression | binary_expression '*' binary_expression|
 cast_expression : unary_expression
 unary_expression    : uscd_expression | unary_operator cast_expression
 uscd_expression : unit_expression | uscd_expression '[' expression ']'  | uscd_expression '(' arg_value_exp_list ')' | uscd_expression '(' ')' | uscd_expression PTR_OP identifier
-unit_expression  : identifier | constant | multiple_string | '(' expression ')'
+unit_expression  : identifier | constant | multiple_string | '(' expression ')' | inlinefunc
 multiple_string  : STRING_CONSTANT | multiple_string STRING_CONSTANT
 unary_operator : '&' | '*' | '+' | '-' | '~' | '!' 
+inlinefunc : SIZEOF
 
 
 
 arg_value_exp_list  : assignable_expression | arg_value_exp_list ',' assignable_expression
 
 
-function_definition : type variable declaration_list_orempty compound_statement
+function_definition : type variable declaration_list_orempty funcbody_statement
 declaration_list    : declaration | declaration_list declaration
-compound_statement : '{' block_item_list_orempty '}'
+funcbody_statement : '{' block_item_list_orempty '}'
 block_item_list_orempty  : empty | block_item_list
 block_item_list : block_item | block_item_list block_item
 block_item  : declaration | statement | comment
-statement   : compound_statement | branch_statement | expression_statement | loop_statement | back_statement
+statement   : funcbody_statement | branch_statement | expression_statement | loop_statement | back_statement
 branch_statement : IF '(' expression ')' statement | IF '(' expression ')' statement ELSE statement  
 expression_statement : expression_orempty
 expression_orempty   : empty | expression

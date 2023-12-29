@@ -198,9 +198,14 @@ def p_identifier_list(p):
         p[0] = p[1]
 
 def p_identifier(p):
-    """ identifier  : IDENTIFIER """
+    """ identifier  : IDENTIFIER 
+                    | inlinefunc """
     args = {'name': p[1], 'spec': None}
     p[0] = myAST.Identifier(**args)
+    
+def p_inclinefunc(p):
+    """ inlinefunc  : SIZEOF"""
+    p[0] =p[1]
 
 # 跳转
 def p_back_statement_break(p):
@@ -262,7 +267,7 @@ def p_arg_value_exp_list(p):
 
 def p_assignable_expression(p):
     """ assignable_expression   : conditional_expression
-                                | variable assign_operator assignable_expression
+                                | unary_expression assign_operator assignable_expression
     """
     if len(p) == 2:
         p[0] = p[1]
@@ -316,8 +321,8 @@ def p_expression_orempty(p):
     """
     p[0] = p[1]
 
-def p_compound_statement(p):
-    """ compound_statement : '{' block_item_list_orempty '}' """
+def p_funcbody_statement(p):
+    """ funcbody_statement : '{' block_item_list_orempty '}' """
     p[0] = myAST.BlockStatement(
         block_items=p[2])
 
@@ -445,7 +450,7 @@ def p_expression_statement(p):
         p[0] = p[1]
 
 def p_function_definition(p):
-    """ function_definition : type variable declaration_list_orempty compound_statement
+    """ function_definition : type variable declaration_list_orempty funcbody_statement
     """
     #variale is func(int a, int b, ...)
     decl_spec = p[1]
@@ -570,6 +575,12 @@ def p_unit_expression_mstring(p):
 def p_unit_expression_bracket(p):
     """ unit_expression  : '(' expression ')' """
     p[0] = p[2]
+    
+
+    
+    
+
+
 
 def p_branch_statement_if(p):
     """ branch_statement : IF '(' expression ')' statement """
@@ -587,8 +598,23 @@ def p_loop_statement(p):
     args={'judge':p[3],'action':p[5]}
     p[0] = myAST.ControlLogic(logicType='While',**args)
 
+def p_loop_statement_2(p):
+    """ loop_statement : FOR '(' parameter_declaration ';' expression_orempty ';' expression_orempty ')'  statement
+                        | FOR '(' expression ';' expression_orempty ';' expression_orempty ')'  statement
+                        | FOR '(' empty ';' expression_orempty ';' expression_orempty ')'  statement
+    """
+    args={'first':p[3],'judge':p[5],'action':p[7]}
+    p[0] = myAST.ControlLogic(logicType='For',**args)
+    
+def p_loop_statement_3(p):
+    """ loop_statement : FOR '(' parameter_declaration '=' expression ';' expression_orempty ';' expression_orempty ')'  statement
+    """
+    args={'first':p[3],'judge':p[7],'action':p[9]}
+    p[0] = myAST.ControlLogic(logicType='For',**args)
+
+
 def p_statement(p):
-    """ statement   : compound_statement
+    """ statement   : funcbody_statement
                     | branch_statement
                     | expression_statement
                     | loop_statement
@@ -689,7 +715,15 @@ def p_unary_operator(p):
                        | '+'
                        | '-'
                        | '~'
-                       | '!' '''
+                       | '!' 
+                       '''
+                       
+    p[0] = p[1]
+    
+def p_self_incdec_op(p):
+    ''' self_incdec :   INC_OP
+                       | DEC_OP
+    '''
     p[0] = p[1]
 
 def p_unary_expression_1(p):
@@ -698,9 +732,17 @@ def p_unary_expression_1(p):
 
 def p_unary_expression_2(p):
     """ unary_expression    : unary_operator cast_expression
+                            | self_incdec cast_expression
     """
     args={'expression':p[2]}
     p[0] = myAST.Operation(OpType='UnaryOp',OpName=p[1],**args)
+    
+def p_unary_expression_3(p):
+    """ unary_expression    : cast_expression self_incdec 
+    """
+    args={'expression':p[1]}
+    p[0] = myAST.Operation(OpType='UnaryOp',OpName=p[2],**args)
+    
 
 def p_multiple_string(p):
     """ multiple_string  : STRING_CONSTANT
@@ -791,7 +833,6 @@ def p_cpp_advanced(p):
     | EXTERN
     | FOR
     | STATIC
-    | SIZEOF
     | UNION
     | VOLATILE
     | RESTRICT
