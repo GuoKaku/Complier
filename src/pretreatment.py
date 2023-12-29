@@ -17,6 +17,7 @@ class Pretreatment:
         return None
     
     def Pretreatment(self,filename):
+        print(f"pretreatment {filename}")
         filedir=os.path.dirname(filename)
         nameoffile = filename.split('/')[-1]
         filename=os.path.join(filedir,nameoffile)
@@ -61,7 +62,7 @@ class Pretreatment:
         filedir=os.path.dirname(filename)
         includes=[]
         i=0
-
+        print(f"pretreatment {filename}")
         while i < len(lines):
             line=lines[i]
             line=line.strip(' ').strip('t').strip('\r').strip('\n')
@@ -117,7 +118,35 @@ class Pretreatment:
                 else:
                     return f"symbol{cmd[0]} cannot be recognized",False
             else: #正常的一行
+                # 处理cout<<endl;这种情况
+                # 看line中是否有cout
+                if "cout" in line:
+                    # 看line中是否有<<
+                    # 把cout后面的第一个<<替换成(
+                    # 获取第一个<<
+                    pos=line.find("<<")
+                    # 如果没有<<，则不需要处理
+                    if pos!=-1:
+                        line = line.replace("<<","(",1)
+                        pos_end = re.search(r"<<\s*endl", line)
+                        if pos_end:
+                            line = re.sub(r"<<\s*endl", ")", line, count=1)
+                        line = line.replace("<<",",")
+
+                # 处理cin
+                if "cin" in line:
+                # 看line中是否有<<
+                # 把cout后面的第一个<<替换成(
+                # 获取第一个<<
+                    pos=line.find(">>")
+                # 如果没有<<，则不需要处理
+                    if pos!=-1:
+                        line = line.replace(">>","(",1)
+                        line = line.replace(">>",",")
+                    line = line.replace(';', ');')
+
                 self.cooked_lines.append(line)
+
             i+=1;    #处理下一行
             
         self.cooked_lines.append('\n')
@@ -131,3 +160,5 @@ class Pretreatment:
     
         
         
+                        
+            
