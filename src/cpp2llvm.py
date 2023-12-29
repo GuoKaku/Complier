@@ -5,14 +5,15 @@ from myYacc import parser
 
 def main():
     import sys
-    from preprocess import preprocess
+    from pretreatment import Pretreatment
     import json
     coder = Coder()
 
     if len(sys.argv) > 1:
-        file_data, ok = preprocess(sys.argv[1])
+        pretreatmenter=Pretreatment()
+        file_data, ok=pretreatmenter.Pretreatment(sys.argv[1])
         if not ok:
-            print('preprocess error')
+            print('pretreatment error')
         else:
             ast_raw = parser.parse(file_data)
             print(f'ast_raw的类型是{type(ast_raw)}')

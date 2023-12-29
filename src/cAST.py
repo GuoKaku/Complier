@@ -146,7 +146,7 @@ class ContentList(Node):
 class Operation(Node):
 
     def __init__(self, OpType, OpName,**kwargs):
-        self.OpType = OpType  # Binary,Unary
+        self.OpType = OpType  # Binary,Unary,Ternary
         self.OpName = OpName
         if OpType == 'BinaryOp':
             self.left = kwargs['left']
@@ -156,6 +156,10 @@ class Operation(Node):
         elif OpType == 'Assignment':
             self.left = kwargs['left']
             self.right = kwargs['right']
+        elif OpType == 'TernaryOp':
+            self.condition = kwargs['condition']
+            self.true = kwargs['true']
+            self.false = kwargs['false']
 
     def sons(self):
         child_list = []
@@ -167,7 +171,11 @@ class Operation(Node):
         elif self.OpType == 'Assignment':
             if self.left != None: child_list.append(("left", self.left))
             if self.right != None: child_list.append(("right", self.right))
-
+        elif self.OpType == 'TernaryOp':
+            if self.condition != None:  child_list.append(('condition',self.condition))
+            if self.true != None: child_list.append(('true',self.true))
+            if self.false != None: child_list.append(('false',self.false))
+            
         return tuple(child_list)
 
 class Ref(Node):
@@ -249,3 +257,10 @@ class DeclarationNode(Node):
         if self.type is not None: child_list.append(("type", self.type))
         if self.init is not None: child_list.append(("init", self.init))
         return tuple(child_list)
+    
+class CommentNode(Node):
+    def __init__(self, content):
+        self.content = content
+        
+    def sons(self):
+        return tuple([])

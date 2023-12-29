@@ -1,6 +1,9 @@
 import re
 import os
 
+
+verbose= False
+
 class Pretreatment:
     def __init__(self) -> None:
         self.macros={}
@@ -17,7 +20,8 @@ class Pretreatment:
         return None
     
     def Pretreatment(self,filename):
-        print(f"pretreatment {filename}")
+        if verbose:
+            print(f"pretreatment {filename}")
         filedir=os.path.dirname(filename)
         nameoffile = filename.split('/')[-1]
         filename=os.path.join(filedir,nameoffile)
@@ -62,7 +66,8 @@ class Pretreatment:
         filedir=os.path.dirname(filename)
         includes=[]
         i=0
-        print(f"pretreatment {filename}")
+        if verbose:
+            print(f"pretreatment {filename}")
         while i < len(lines):
             line=lines[i]
             line=line.strip(' ').strip('t').strip('\r').strip('\n')

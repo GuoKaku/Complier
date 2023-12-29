@@ -1,30 +1,42 @@
 import re
 import ply.yacc as yacc
 import cAST as myAST
-from lex import *
+from lexer import *
 from utils import handle_decl_change
 
 # 开始
-# translation_unit 是一个list，内含多个external declaration
 
-def p_translation_unit_or_empty(p):
-    """ translation_unit_or_empty   : translation_unit
-                                    | empty
+
+def p_starter(p):
+    """ start   : part
+                | empty
     """
     p[0] = myAST.TopAST(p[1]) if p[1] is not None else myAST.TopAST([])
 
-def p_translation_unit(p):
-    """ translation_unit    : translation_unit external_declaration
-                            | external_declaration
+
+def p_part(p):
+    """ part    : part declorcom
+                | declorcom
     """
     if len(p) > 2:
         if p[2] is not None:
             p[1].extend(p[2])
     p[0] = p[1]
-
+    
+    
+def p_decl_or_comment_1(p):
+    """ declorcom   : comment
+    """
+    p[0] = [p[1]]
+    
+def p_decl_or_comment_2(p):
+    """ declorcom   : external_declaration
+    """
+    p[0] = p[1]
+    
 
 def p_initializer_ass(p):
-    """ initializer : assignment_expression
+    """ initializer : assignable_expression
     """
     p[0] = p[1]
 
@@ -49,30 +61,26 @@ def p_initializer_list(p):
         p[1].elements.append(init)
         p[0] = p[1]
 
-def p_init_declarator(p):
-    """ init_declarator : declarator
-                        | declarator '=' initializer
+def p_variable_initable(p):
+    """ variable_initable : variable
+                        | variable '=' initializer
     """
     init_ = None
     if len(p) > 2:
         init_ = p[3]
     p[0] = dict(type=p[1], init=init_)
 
-def p_init_declarator_list_idec(p):
-    """ init_declarator_list    : init_declarator
-                                | init_declarator_list ',' init_declarator
+def p_variable_initable_list_idec(p):
+    """ variable_initable_list    : variable_initable
+                                | variable_initable_list ',' variable_initable
     """
     if len(p) == 4:
         p[0] = p[1] + [p[3]]
     else:
         p[0] = [p[1]]
 
-# 表达式
-def p_declaration_specifiers_orempty(p):
-    """declaration_specifiers_orempty   : empty
-                                    | declaration_specifiers
-    """
-    p[0] = p[1]
+    
+
 
 
 def p_empty(p):
@@ -81,30 +89,45 @@ def p_empty(p):
     p[0] = None
 
 
-def p_declaration_specifiers_td(p):
-    """ declaration_specifiers  : type_specifier declaration_specifiers_orempty
+def p_type(p):
+    """ type  : type_specifier_can_unsigned
+                                | type_specifier_cannot_unsigned 
+                                | uorus
+                                | uorus type_specifier_can_unsigned
     """
-    if p[2]:
-        p[2]['spec'].insert(0, p[1])
-        p[0] = p[2]
+    if len(p)>2:
+        p[0] = dict(qual=[], spec=[p[1],p[2]])
     else:
         p[0] = dict(qual=[], spec=[p[1]])
+        
 
 
 def p_type_specifier(p):
-    ''' type_specifier : VOID
-                       | CHAR
-                       | SHORT
-                       | INT
-                       | LONG
+    '''type_specifier : type_specifier_cannot_unsigned
+                        | type_specifier_can_unsigned
+                        | uorus '''
+
+def p_type_specifier_cannot_unsigned(p):
+    ''' type_specifier_cannot_unsigned : VOID
                        | FLOAT
                        | DOUBLE
-                       | SIGNED
-                       | UNSIGNED
                        | BOOL
                        | struct_specifier
     '''
     p[0] = p[1]
+    
+def p_type_specifier_can_unsigned(p):
+    ''' type_specifier_can_unsigned : INT
+                       | SHORT
+                       | LONG
+                       | CHAR
+    '''
+    p[0] = p[1]
+    
+def p_uorus(p):
+    '''uorus   :          SIGNED
+                       | UNSIGNED'''
+    p[0]=p[1]
 
 def p_declaration_list_orempty(p):
     """declaration_list_orempty : empty
@@ -113,7 +136,7 @@ def p_declaration_list_orempty(p):
     p[0] = p[1]
 
 def p_declaration(p):
-    """ declaration : declaration_specifiers init_declarator_list_orempty ';'
+    """ declaration : type variable_initable_list_orempty ';'
     """
     decl_spec = p[1]
     struct = None
@@ -127,25 +150,25 @@ def p_declaration(p):
         type = init_decl['type']
         if struct is not None:
             if isinstance(type, myAST.Identifier):
-                kws = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': struct,
+                args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': struct,
                        'init': init_decl['init']}
-                declaration = myAST.DeclarationNode(**kws)
+                declaration = myAST.DeclarationNode(**args)
 
             else:
                 while not isinstance(type.type, myAST.Identifier):
                     type = type.type
                 declname = type.type.name
                 type.type = struct
-                kws = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': init_decl['type'],
+                args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': init_decl['type'],
                        'init': None}
-                declaration = myAST.DeclarationNode(**kws)
+                declaration = myAST.DeclarationNode(**args)
         else:
             while not isinstance(type, myAST.Identifier):
                 type = type.type
             type.spec = decl_spec['spec']
-            kws = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': init_decl['type'],
+            args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': init_decl['type'],
                    'init': init_decl['init']}
-            declaration = myAST.DeclarationNode(**kws)
+            declaration = myAST.DeclarationNode(**args)
         p[0].insert(0, declaration)
 
 def p_declaration_list(p):
@@ -176,45 +199,45 @@ def p_identifier_list(p):
 
 def p_identifier(p):
     """ identifier  : IDENTIFIER """
-    kws = {'name': p[1], 'spec': None}
-    p[0] = myAST.Identifier(**kws)
+    args = {'name': p[1], 'spec': None}
+    p[0] = myAST.Identifier(**args)
 
 # 跳转
-def p_jump_statement_b(p):
-    """ jump_statement  : BREAK ';' """
+def p_back_statement_break(p):
+    """ back_statement  : BREAK ';' """
     p[0] = myAST.ControlLogic(logicType='Break')
 
-def p_jump_statement_c(p):
-    """ jump_statement  : CONTINUE ';' """
+def p_back_statement_continue(p):
+    """ back_statement  : CONTINUE ';' """
     p[0] = myAST.ControlLogic(logicType='Continue')
 
-def p_jump_statement_r(p):
-    """ jump_statement  : RETURN ';'
+def p_back_statement_return(p):
+    """ back_statement  : RETURN ';'
                         | RETURN expression ';'
     """
     if len(p)==3:
-        kws = {"return_result": None}
-        p[0] = myAST.ControlLogic(logicType='Return',**kws)
+        args = {"return_result": None}
+        p[0] = myAST.ControlLogic(logicType='Return',**args)
     else:
-        kws={"return_result":p[2]}
-        p[0] = myAST.ControlLogic(logicType='Return',**kws)
+        args={"return_result":p[2]}
+        p[0] = myAST.ControlLogic(logicType='Return',**args)
 
 
-def p_init_declarator_list_orempty(p):
-    """init_declarator_list_orempty  : empty
-                            | init_declarator_list
+def p_variable_initable_list_orempty(p):
+    """variable_initable_list_orempty  : empty
+                            | variable_initable_list
     """
     p[0] = p[1]
 
-def p_assignment_expression_orempty(p):
-    """assignment_expression_orempty    : empty
-                                    | assignment_expression
+def p_assignable_expression_orempty(p):
+    """assignable_expression_orempty    : empty
+                                    | assignable_expression
     """
     p[0] = p[1]
 
 
-def p_assignment_operator(p):
-    ''' assignment_operator : '='
+def p_assign_operator(p):
+    ''' assign_operator : '='
                             | MUL_ASSIGN
                             | DIV_ASSIGN
                             | MOD_ASSIGN
@@ -227,9 +250,9 @@ def p_assignment_operator(p):
                             | OR_ASSIGN '''
     p[0] = p[1]
 
-def p_argument_expression_list(p):
-    """ argument_expression_list    : assignment_expression
-                                    | argument_expression_list ',' assignment_expression
+def p_arg_value_exp_list(p):
+    """ arg_value_exp_list    : assignable_expression
+                                    | arg_value_exp_list ',' assignable_expression
     """
     if len(p) == 2:
         p[0] = myAST.ContentList(listType='ExprList', elements=[p[1]])
@@ -237,15 +260,15 @@ def p_argument_expression_list(p):
         p[1].elements.append(p[3])
         p[0] = p[1]
 
-def p_assignment_expression(p):
-    """ assignment_expression   : conditional_expression
-                                | unary_expression assignment_operator assignment_expression
+def p_assignable_expression(p):
+    """ assignable_expression   : conditional_expression
+                                | unary_expression assign_operator assignable_expression
     """
     if len(p) == 2:
         p[0] = p[1]
     else:
-        kws={'left':p[1],'right':p[3]}
-        p[0] = myAST.Operation(OpType='Assignment',OpName=p[2],**kws)
+        args={'left':p[1],'right':p[3]}
+        p[0] = myAST.Operation(OpType='Assignment',OpName=p[2],**args)
 
 def p_block_item_list_orempty(p):
     """block_item_list_orempty  : empty
@@ -269,6 +292,7 @@ def p_specifier_qualifier_list_orempty(p):
 def p_block_item(p):
     """ block_item  : declaration
                     | statement
+                    | comment
     """
     p[0] = p[1] if isinstance(p[1], list) else [p[1]]
 
@@ -298,10 +322,21 @@ def p_compound_statement(p):
         block_items=p[2])
 
 def p_conditional_expression(p):
-    """ conditional_expression  : binary_expression
+    """ conditional_expression  : binary_expression 
+                | ternary_expression
     """
     if len(p) == 2:
         p[0] = p[1]
+        
+def p_ternary_expression(p):
+    """ternary_expression : expression '?' expression ':' expression
+    """
+    if len(p) == 6:
+        args={'condition':p[1],'true':p[3],'false':p[5]}
+        p[0] = myAST.Operation(OpType='TernaryOp',OpName=p[2],**args)
+    
+        
+
 
 def p_constant_int(p):
     """ constant    : INTEGER_CONSTANT
@@ -321,7 +356,7 @@ def p_constant_float(p):
     p[0] = myAST.Constant(
         'float', p[1], )
 
-def p_constant_bool(p):
+def p_bool_constant(p):
     """ constant    : BOOL_CONSTANT
     """
     p[0] = myAST.Constant(
@@ -331,18 +366,18 @@ def p_constant_expression(p):
     """ constant_expression : conditional_expression """
     p[0] = p[1]
 
-def p_declarator_direct(p):
-    """ declarator  : direct_declarator
+def p_variable_direct(p):
+    """ variable  : direct_variable
     """
     p[0] = p[1]
 
-def p_declarator_pd(p):
-    """ declarator  : pointer direct_declarator
+def p_variable_pd(p):
+    """ variable  : pointer direct_variable
     """
     p[0] = handle_decl_change(p[2], p[1])
 
 def p_specifier_qualifier_list_ts(p):
-    """ specifier_qualifier_list    : type_specifier specifier_qualifier_list_orempty
+    """ specifier_qualifier_list    : type specifier_qualifier_list_orempty
     """
     if p[2]:
         p[2]['spec'].insert(0, p[1])
@@ -352,25 +387,26 @@ def p_specifier_qualifier_list_ts(p):
 
 
 # 直接声明
-def p_direct_declarator_1(p):
-    """ direct_declarator   : identifier
+def p_direct_variable_1(p):
+    """ direct_variable   : identifier
     """
     p[0] = p[1]
 
-def p_direct_declarator_3(p):
-    """ direct_declarator   : direct_declarator '[' assignment_expression_orempty ']'
+def p_direct_variable_3(p):
+    """ direct_variable   : direct_variable '[' assignable_expression_orempty ']'
     """
-    kws={'dim':p[3]}
-    arr = myAST.DeclArray(**kws)
+    print(3,p[3])
+    args={'dim':p[3]}
+    arr = myAST.DeclArray(**args)
 
     p[0] = handle_decl_change(p[1], arr)
 
-def p_direct_declarator_6(p):
-    """ direct_declarator   : direct_declarator '(' parameter_list ')'
-                            | direct_declarator '(' identifier_list_orempty ')'
+def p_direct_variable_6(p):
+    """ direct_variable   : direct_variable '(' parameter_list ')'
+                            | direct_variable '(' identifier_list_orempty ')'
     """
-    kws={'args':p[3]}
-    func = myAST.DeclFunction(**kws)
+    args={'args':p[3]}
+    func = myAST.DeclFunction(**args)
 
     p[0] = handle_decl_change(p[1], func)
 
@@ -383,12 +419,14 @@ def p_external_declaration_2(p):
     """ external_declaration    : declaration
     """
     p[0] = p[1]
+    
+    
 
 
 # 表达式
 def p_expression(p):
-    """ expression  : assignment_expression
-                    | expression ',' assignment_expression
+    """ expression  : assignable_expression
+                    | expression ',' assignable_expression
     """
     if len(p) == 2:
         p[0] = p[1]
@@ -406,9 +444,10 @@ def p_expression_statement(p):
     else:
         p[0] = p[1]
 
-def p_function_definition_2(p):
-    """ function_definition : declaration_specifiers declarator declaration_list_orempty compound_statement
+def p_function_definition(p):
+    """ function_definition : type variable declaration_list_orempty compound_statement
     """
+    #variale is func(int a, int b, ...)
     decl_spec = p[1]
     struct = None
     if isinstance(decl_spec['spec'][0], myAST.Struct):
@@ -417,27 +456,27 @@ def p_function_definition_2(p):
 
     if struct is not None:
         if isinstance(type, myAST.Identifier):
-            kws={'name':type.name,'quals':decl_spec['qual'],'spec':decl_spec['spec'],'type':struct,'init':None}
-            declaration = myAST.DeclarationNode(**kws)
+            args={'name':type.name,'quals':decl_spec['qual'],'spec':decl_spec['spec'],'type':struct,'init':None}
+            declaration = myAST.DeclarationNode(**args)
         else:
             while not isinstance(type.type, myAST.Identifier):
                 type = type.type
             declname = type.type.name
             type.type = struct
-            kws = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
+            args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
                    'init': None}
-            declaration = myAST.DeclarationNode(**kws)
+            declaration = myAST.DeclarationNode(**args)
 
     else:
         while not isinstance(type, myAST.Identifier):
             type = type.type
         type.spec = decl_spec['spec']
-        kws = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
+        args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
                'init': None}
-        declaration = myAST.DeclarationNode(**kws)
+        declaration = myAST.DeclarationNode(**args)
 
-    fun_kws = {'decl': declaration, 'param_decls': p[3], 'body': p[4]}
-    p[0] = myAST.FuncDef(**fun_kws)
+    fun_args = {'decl': declaration, 'param_decls': p[3], 'body': p[4]}
+    p[0] = myAST.FuncDef(**fun_args)
 
 
 
@@ -451,8 +490,8 @@ def p_parameter_list(p):
         p[1].elements.append(p[3])
         p[0] = p[1]
 
-def p_parameter_declaration_1(p):
-    """ parameter_declaration   : declaration_specifiers declarator
+def p_parameter_declaration(p):
+    """ parameter_declaration   : type variable
     """
     decl_spec = p[1]
     struct = None
@@ -462,97 +501,98 @@ def p_parameter_declaration_1(p):
 
     if struct is not None:
         if isinstance(type, myAST.Identifier):
-            kws = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
+            args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
                    'type': struct,
                    'init': None}
-            declaration = myAST.DeclarationNode(**kws)
+            declaration = myAST.DeclarationNode(**args)
         else:
             while not isinstance(type.type, myAST.Identifier):
                 type = type.type
             declname = type.type.name
             type.type = struct
-            kws = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
+            args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
                    'type': p[2],
                    'init': None}
-            declaration = myAST.DeclarationNode(**kws)
+            declaration = myAST.DeclarationNode(**args)
     else:
         while not isinstance(type, myAST.Identifier):
             type = type.type
         type.spec = decl_spec['spec']
-        kws = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
+        args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
                'type': p[2],
                'init': None}
-        declaration = myAST.DeclarationNode(**kws)
+        declaration = myAST.DeclarationNode(**args)
 
     p[0] = declaration
 
-def p_postfix_expression_1(p):
-    """ postfix_expression  : primary_expression """
+#usdc: unit, subscript, func call, depoint
+def p_uscd_expression_1(p):
+    """ uscd_expression : unit_expression """
     p[0] = p[1]
 
-def p_postfix_expression_2(p):
-    """ postfix_expression  : postfix_expression '[' expression ']' """
+def p_uscd_expression_2(p):
+    """ uscd_expression : uscd_expression '[' expression ']' """
     #p[0] = myAST.ArrayRef(p[1], p[3])
-    kws = {'subscript': p[3]}
-    p[0] = myAST.Ref(refType='ArrayRef', name=p[1], **kws)
+    args = {'subscript': p[3]}
+    p[0] = myAST.Ref(refType='ArrayRef', name=p[1], **args)
 
-def p_postfix_expression_3(p):
-    """ postfix_expression  : postfix_expression '(' argument_expression_list ')'
-                            | postfix_expression '(' ')'
+def p_uscd_expression_3(p):
+    """ uscd_expression : uscd_expression '(' arg_value_exp_list ')'
+                            | uscd_expression '(' ')'
     """
     if len(p) == 5:
-        kws = {'name': p[1], 'args': p[3]}
+        args = {'name': p[1], 'args': p[3]}
     else:
-        kws = {'name': p[1], 'args': None}
-    p[0] = myAST.FuncCall(**kws)
+        args = {'name': p[1], 'args': None}
+    p[0] = myAST.FuncCall(**args)
 
-def p_postfix_expression_4(p):
-    """ postfix_expression  : postfix_expression PTR_OP identifier
+def p_uscd_expression_4(p):
+    """ uscd_expression : uscd_expression PTR_OP identifier
     """
-    kws1 = {'name': p[3], 'spec': None}
-    field = myAST.Identifier(**kws1)
-    kws={'type':p[2],'field':field}
-    p[0] = myAST.Ref(refType='StructRef',name=p[1], **kws)
+    args1 = {'name': p[3], 'spec': None}
+    field = myAST.Identifier(**args1)
+    args={'type':p[2],'field':field}
+    p[0] = myAST.Ref(refType='StructRef',name=p[1], **args)
 
-def p_primary_expression_1(p):
-    """ primary_expression  : identifier """
+def p_unit_expression_id(p):
+    """ unit_expression  : identifier """
     p[0] = p[1]
 
-def p_primary_expression_2(p):
-    """ primary_expression  : constant """
+def p_unit_expression_const(p):
+    """ unit_expression  : constant """
     p[0] = p[1]
 
-def p_primary_expression_3(p):
-    """ primary_expression  : unified_string_literal
+def p_unit_expression_mstring(p):
+    """ unit_expression  : multiple_string
     """
     p[0] = p[1]
 
-def p_primary_expression_4(p):
-    """ primary_expression  : '(' expression ')' """
+def p_unit_expression_bracket(p):
+    """ unit_expression  : '(' expression ')' """
     p[0] = p[2]
 
-def p_selection_statement_1(p):
-    """ selection_statement : IF '(' expression ')' statement """
-    kws={'judge':p[3], 'action1':p[5], 'action2': None}
-    p[0] = myAST.ControlLogic('If',**kws)
+def p_branch_statement_if(p):
+    """ branch_statement : IF '(' expression ')' statement """
+    args={'judge':p[3], 'action1':p[5], 'action2': None}
+    p[0] = myAST.ControlLogic('If',**args)
 
-def p_selection_statement_2(p):
-    """ selection_statement : IF '(' expression ')' statement ELSE statement """
-    kws = {'judge': p[3], 'action1': p[5], 'action2': p[7]}
-    p[0] = myAST.ControlLogic('If', **kws)
+def p_branch_statement_ifelse(p):
+    """ branch_statement : IF '(' expression ')' statement ELSE statement """
+    args = {'judge': p[3], 'action1': p[5], 'action2': p[7]}
+    p[0] = myAST.ControlLogic('If', **args)
 
 
-def p_iteration_statement_1(p):
-    """ iteration_statement : WHILE '(' expression ')' statement """
-    kws={'judge':p[3],'action':p[5]}
-    p[0] = myAST.ControlLogic(logicType='While',**kws)
+def p_loop_statement(p):
+    """ loop_statement : WHILE '(' expression ')' statement """
+    args={'judge':p[3],'action':p[5]}
+    p[0] = myAST.ControlLogic(logicType='While',**args)
 
 def p_statement(p):
     """ statement   : compound_statement
-                    | selection_statement
+                    | branch_statement
                     | expression_statement
-                    | iteration_statement
-                    | jump_statement
+                    | loop_statement
+                    | back_statement
     """
     p[0] = p[1]
 
@@ -594,7 +634,7 @@ def p_struct_declaration_list(p):
         p[0] = p[1] + (p[2] or [])
 
 def p_struct_declaration(p):
-    """ struct_declaration : specifier_qualifier_list struct_declarator_list ';'
+    """ struct_declaration : type struct_variable_list ';'
     """
     p[0] = []
     struct_decl_list = p[2]
@@ -613,16 +653,16 @@ def p_struct_declaration(p):
         else:
             type.spec = spec_qual['spec']
             declname = type.name
-        kws = {'name': declname, 'quals': spec_qual['qual'], 'spec': spec_qual['spec'],
+        args = {'name': declname, 'quals': spec_qual['qual'], 'spec': spec_qual['spec'],
                'type': decl,
                'init': None}
-        declaration = myAST.DeclarationNode(**kws)
+        declaration = myAST.DeclarationNode(**args)
         p[0].insert(0, declaration)
 
 
-def p_struct_declarator_list(p):
-    """ struct_declarator_list  : declarator
-                                | struct_declarator_list ',' declarator
+def p_struct_variable_list(p):
+    """ struct_variable_list  : variable
+                                | struct_variable_list ',' variable
     """
     p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
 
@@ -631,8 +671,8 @@ def p_pointer(p):
     """ pointer : '*'
                 | '*' pointer
     """
-    kws={'quals':p[1]}
-    type_ = myAST.DeclPointer(**kws or [])
+    args={'quals':p[1]}
+    type_ = myAST.DeclPointer(**args or [])
     if len(p) > 2:
         tail = p[2]
         while tail.type is not None:
@@ -653,18 +693,18 @@ def p_unary_operator(p):
     p[0] = p[1]
 
 def p_unary_expression_1(p):
-    """ unary_expression    : postfix_expression """
+    """ unary_expression    : uscd_expression"""
     p[0] = p[1]
 
 def p_unary_expression_2(p):
     """ unary_expression    : unary_operator cast_expression
     """
-    kws={'expression':p[2]}
-    p[0] = myAST.Operation(OpType='UnaryOp',OpName=p[1],**kws)
+    args={'expression':p[2]}
+    p[0] = myAST.Operation(OpType='UnaryOp',OpName=p[1],**args)
 
-def p_unified_string_literal(p):
-    """ unified_string_literal  : STRING_CONSTANT
-                                | unified_string_literal STRING_CONSTANT
+def p_multiple_string(p):
+    """ multiple_string  : STRING_CONSTANT
+                                | multiple_string STRING_CONSTANT
     """
     if len(p) == 2:
         p[0] = myAST.Constant(
@@ -697,13 +737,20 @@ def p_binary_expression(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        kws={'left':p[1],'right':p[3]}
-        p[0] = myAST.Operation(OpType='BinaryOp',OpName=p[2],**kws)
+        args={'left':p[1],'right':p[3]}
+        p[0] = myAST.Operation(OpType='BinaryOp',OpName=p[2],**args)
 
 def p_cast_expression_1(p):
     """ cast_expression : unary_expression """
     p[0] = p[1]
 
+def p_comment_1(p):
+    """  
+        comment : COMMENT1
+                | COMMENT2
+    """
+    p[0]=myAST.CommentNode(p[1])
+    
 
 
 
@@ -713,7 +760,6 @@ def p_cpp_advanced(p):
     | BUILT_IN_FUNCTION
     | CATCH
     | CLASS
-    | COMMENT1
     | COMMENT2
     | CONST_CAST
     | DELETE
@@ -763,6 +809,7 @@ def p_cpp_advanced(p):
     pass
 
 
+    
 
 def p_error(p):
     #print('Syntax error of %s type in line %d, lexpos - %d: %s' % (p.type, p.lineno, p.lexpos, p.value))
@@ -773,27 +820,25 @@ def p_error(p):
     else:
         print("Syntax error at EOF")
 
-
+lexer = lex.lex()
 parser = yacc.yacc()
 
 if __name__ == '__main__':
     import sys
-    import io
-    from preprocess import preprocess
+    from pretreatment import Pretreatment
     import json
 
     if len(sys.argv) > 1:  # specify file
-
-        file_data, ok = preprocess(sys.argv[1])
+        pretreatmenter=Pretreatment()
+        file_data, ok=pretreatmenter.Pretreatment(sys.argv[1])
         if not ok:
-            print('preprocess error')
+            print('pretreatment error')
         else:
-            result = parser.parse(file_data)
-
-
+            result = parser.parse(file_data, lexer=lexer)
+            print(result.__str__())
             ast_dict = result.build_tree()
             tree = json.dumps(ast_dict, indent=4)
-            save_path = sys.argv[1][:-len('.cpp')]+'_ast.json'
+            save_path = sys.argv[1][:-len('.cpp')]+'_syntree.json'
             if len(sys.argv) > 2:
                 save_path = sys.argv[2]
             with open(save_path, 'w+',encoding='utf-8') as f:
