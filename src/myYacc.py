@@ -1,6 +1,6 @@
 import re
 import ply.yacc as yacc
-import cAST as myAST
+import SynTree as myAST
 from lexer import *
 from utils import handle_decl_change
 
@@ -262,7 +262,7 @@ def p_arg_value_exp_list(p):
 
 def p_assignable_expression(p):
     """ assignable_expression   : conditional_expression
-                                | unary_expression assign_operator assignable_expression
+                                | variable assign_operator assignable_expression
     """
     if len(p) == 2:
         p[0] = p[1]
@@ -744,7 +744,7 @@ def p_cast_expression_1(p):
     """ cast_expression : unary_expression """
     p[0] = p[1]
 
-def p_comment_1(p):
+def p_comment(p):
     """  
         comment : COMMENT1
                 | COMMENT2

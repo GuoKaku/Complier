@@ -1,6 +1,6 @@
 
 
-import cAST as myAST
+import SynTree as myAST
 
 
 def handle_decl_change(to_change, changer):

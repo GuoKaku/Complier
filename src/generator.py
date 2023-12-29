@@ -1,6 +1,6 @@
 from __future__ import print_function
 from llvmlite import ir
-import cAST as cAST
+import SynTree as SynTree
 
 int32 = ir.IntType(32)
 int8 = ir.IntType(8)
@@ -43,9 +43,9 @@ class Coder(object):
 
     def translate_TopAST(self, ast_node, level=0):
         for unit in ast_node.unitList:
-            if isinstance(unit, cAST.FuncDef):
+            if isinstance(unit, SynTree.FuncDef):
                 self.translate(unit, level=0)
-            elif isinstance(unit, cAST.DeclarationNode):
+            elif isinstance(unit, SynTree.DeclarationNode):
                 self.translate(unit, level=1)
 
     def translate_DeclarationNode(self, ast_node, level=0):
@@ -159,7 +159,7 @@ class Coder(object):
                 raise RuntimeError("Undefined variable: " + ast_node.name)
 
 
-    def translate_Operation(self, ast_node: cAST.Operation, level=0):
+    def translate_Operation(self, ast_node: SynTree.Operation, level=0):
         if ast_node.OpType == 'BinaryOp':
             print(f'translate_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, ast_node.left:{ast_node.left}, ast_node.right:{ast_node.right}')
 
@@ -286,7 +286,7 @@ class Coder(object):
             else:
                 self.code_builders.ret_void()
 
-    def translate_Ref(self, ast_node: cAST.Ref, level=0):
+    def translate_Ref(self, ast_node: SynTree.Ref, level=0):
         """
         ArrayRef,按照下标获取数组某个元素
         StructRef，按照域名获取结构体成员变量
@@ -395,11 +395,11 @@ class Coder(object):
 
     def return_content(self, ast_node, arg=None):
         if arg is not None:
-            if type(ast_node) == cAST.DeclPointer:
+            if type(ast_node) == SynTree.DeclPointer:
                 return ir.PointerType(arg)
-            elif type(ast_node) == cAST.DeclArray:
+            elif type(ast_node) == SynTree.DeclArray:
                 return ir.ArrayType(arg, int(ast_node.dim.content))
-            elif type(ast_node) == cAST.DeclFunction:
+            elif type(ast_node) == SynTree.DeclFunction:
                 param_list = []
                 if ast_node.args:
                     for p in ast_node.args.elements:
@@ -424,13 +424,13 @@ class Coder(object):
 
     def allocate_variable(self, ast_node, level=0, modifier_list=[]):
         print(f'allocate_variable, ast_node:{ast_node}, level:{level}, modifier_list:{modifier_list}')
-        if type(ast_node) == cAST.Identifier:
+        if type(ast_node) == SynTree.Identifier:
             print(f'ast_node.name:{ast_node.name}')
             return self.allocate_indenti(ast_node, level, modifier_list)
-        elif type(ast_node) == cAST.Struct:
+        elif type(ast_node) == SynTree.Struct:
             return self.allocate_struct(ast_node, level, modifier_list)
-        elif (type(ast_node) == cAST.DeclArray) or (type(ast_node) == cAST.DeclFunction) or (
-                type(ast_node) == cAST.DeclPointer) or (type(ast_node) == cAST.DeclarationNode):
+        elif (type(ast_node) == SynTree.DeclArray) or (type(ast_node) == SynTree.DeclFunction) or (
+                type(ast_node) == SynTree.DeclPointer) or (type(ast_node) == SynTree.DeclarationNode):
             return self.allocate_variable(ast_node.type, level, modifier_list + [ast_node])
 
     def allocate_indenti(self, ast_node, level=0, modifier_list=[]):
@@ -452,7 +452,7 @@ class Coder(object):
             return iden_type
         elif level == 2:
             if len(modifier_list) > 0:
-                if type(modifier_list[0]) == cAST.DeclFunction:
+                if type(modifier_list[0]) == SynTree.DeclFunction:
                     new_func = ir.Function(self.code_module, iden_type, name=iden_name)
                     if modifier_list[0].args:
                         params = []
@@ -514,7 +514,7 @@ class Coder(object):
             self.glb_variables[mod_name] = ir.GlobalVariable(self.code_module, identified_type, name=mod_name)
             self.glb_variables[mod_name].initializer = ir.Constant(identified_type, None)
         elif len(modifier_list) > 0:
-            if type(modifier_list[0]) == cAST.DeclFunction:
+            if type(modifier_list[0]) == SynTree.DeclFunction:
                 new_func = ir.Function(self.code_module, identified_type, name=mod_name)
                 params = []
                 for p in modifier_list[0].args:

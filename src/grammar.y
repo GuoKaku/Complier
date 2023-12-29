@@ -1,6 +1,6 @@
 start   : part | empty
 part    : part declorcom | declorcom
-declorcom   : comment |external_declaration
+declorcom   : comment | external_declaration
 external_declaration    : function_definition | declaration
 
 declaration : type variable_initable_list_orempty ';' 
@@ -8,12 +8,13 @@ type  : type_specifier_can_unsigned | type_specifier_cannot_unsigned  | uorus | 
 type_specifier : type_specifier_cannot_unsigned | type_specifier_can_unsigned | uorus
 type_specifier_can_unsigned: CHAR | SHORT | INT | LONG 
 type_specifier_cannot_unsigned : VOID | FLOAT | DOUBLE | BOOL | struct_specifier
+uorus:  SIGNED | UNSIGNED 
+
 struct_specifier   : STRUCT identifier | STRUCT '{' struct_declaration_list '}' | STRUCT identifier '{' struct_declaration_list '}' 
 struct_declaration_list     : struct_declaration | struct_declaration_list struct_declaration
 struct_declaration : type struct_variable_list ';'
 struct_variable_list  : variable | struct_variable_list ',' variable
 
-uorus:  SIGNED | UNSIGNED 
 
 variable_initable_list_orempty  : empty | variable_initable_list
 variable_initable_list    : variable_initable | variable_initable_list ',' variable_initable
@@ -29,7 +30,7 @@ constant    : INTEGER_CONSTANT | CHAR_CONSTANT | FLOAT_CONSTANT | BOOL_CONSTANT
 initializer : assignable_expression |'{' initializer_list_orempty '}' | '{' initializer_list ',' '}'
 initializer_list_orempty : empty | initializer_list
 initializer_list    : initializer | initializer_list ',' initializer
-assignable_expression   : conditional_expression | identifier assign_operator assignable_expression
+assignable_expression   : conditional_expression | variable assign_operator assignable_expression
 assign_operator : '=' | MUL_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | ADD_ASSIGN | SUB_ASSIGN | LEFT_ASSIGN | RIGHT_ASSIGN | AND_ASSIGN | XOR_ASSIGN | OR_ASSIGN 
 
 expression  : assignable_expression | expression ',' assignable_expression
@@ -59,3 +60,5 @@ branch_statement : IF '(' expression ')' statement | IF '(' expression ')' state
 expression_statement : expression_orempty
 expression_orempty   : empty | expression
 loop_statement : WHILE '(' expression ')' statement 
+
+comment : COMMENT1 | COMMENT2

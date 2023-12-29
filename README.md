@@ -38,13 +38,28 @@ python src/lexer.py exe/test.cpp > token_test.txt
 ```
 
 + 语法分析
+``` bash
+python src/myYacc.py exe/test.cpp
+```
+会把生成的json格式的语法分析树保存在test.cpp源文件同目录下，以test为例，会命名为test_syntree.json
 
 	
 
 ## 支持的功能
+### 词法分析部分
 
 + 预处理`#include`和`#define`
 + 词法分析的错误处理：遇到错误（无法匹配识别的部分）时不会阻塞，会打印报错信息并继续进行编译
+
+### 语法分析部分
++ 支持函数、变量、数组（高维）、结构体声明
++ 支持精确的类型定义（如unsigned int）
++ 支持
++ 支持表达式解析（包括一元、二元、三元和赋值表达式）
++ 支持参数列表、列表式声明（如int a=1, *b, c = 2+3）
++ 支持分支、循环、跳出语句
++ 支持（多重）指针的解析
++ 支持注释插入语法书中（或许之后可以移植到llvm中？）
 
 ## 难点与创新点
 
@@ -82,19 +97,57 @@ line = line.strip(' ').strip('\t').strip('\r').strip('\n')
 
 ### 语法分析
 
-根据C99的C标准编写语法规则
+#### PLY库
+PLY库的语法分析需要在给定语法规则的同时，手动构造个对应语法规则的解析器，比较麻烦
 
 #### 注释处理
+在两个地方插入了注释操作：一是cpp文件所有函数定义之外，另一是函数体之中，实现方法是自定义了新的语法规则如
+```declorcom   : comment | external_declaration```  这里declorcom表示要么是一个声明要么是一条注释。以及```block_item  : declaration | statement | comment```，表示函数体的一个项目要么是声明或者语句，要么是注释
 
-#### 错误处理
+#### 精确的类型标识符
+支持int, unsigned, unsigned int（等，这一系列的），同时对形如unsigned float这类就行错误处理
+
+#### 三元运算符
+除了常规支持一元、二元运算符外，本项目的语法分析部分还可以支持c特有的三元运算符，由如下函数确定：
+```
+def p_conditional_expression(p):
+    """ conditional_expression  : binary_expression 
+                | ternary_expression
+    """
+    if len(p) == 2:
+        p[0] = p[1]
+        
+def p_ternary_expression(p):
+    """ternary_expression : expression '?' expression ':' expression
+    """
+    if len(p) == 6:
+        args={'condition':p[1],'true':p[3],'false':p[5]}
+        p[0] = myAST.Operation(OpType='TernaryOp',OpName=p[2],**args)
+```
+
+#### 区分左值右值
+总所周知，右值（包括函数返回值、表达式计算值、或者常量右值）都不能进行赋值运算，我们考虑到了这一点。在语法规则中考虑到了
+```
+assignable_expression   : conditional_expression | variable assign_operator assignable_expression
+```
+这里表示我们的赋值运算只支持左值，varible就是一个左值量，而不能是任意表达式。
+
+#### 对赋值运算符进行语法检查
+c++（或者说c）中支持形如
+```
+    int a = 1;
+    int b = a*=3 ;
+```
+的语法。其作用是先是a*=3，然后结果赋值给b。我们支持这个语法，
 
 ## 分工
 
 |        | 词法分析阶段                                               | 语法分析阶段             |
 | ------ | ---------------------------------------------------------- | ------------------------ |
+| 郭嘉伟 | 编写预处理`#include`、`#define`、`#ifndef`，查找C++标准    | 语法规则整理编写,语法树生成调研编写 |
 | 林敏芝 | 搭建框架、工具调研、正则表达式设计、注释处理、测试代码编写 | 语法规则调研编写         |
 | 王皓雯 | 搭建框架、工具调研、完成token列表                          |   处理注释、检查声明正确性     |
-| 郭嘉伟 | 编写预处理`#include`、`#define`、`#ifndef`，查找C++标准    | 语法规则整理编写,语法树生成调研编写 |
+
 
 ## 参考
 
