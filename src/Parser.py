@@ -1,8 +1,8 @@
 import re
 import ply.yacc as yacc
-import SynTree as myAST
+import SynTree as SynTree
 from lexer import *
-from utils import handle_decl_change
+from utility import handle_decl_change
 
 # 开始
 
@@ -11,7 +11,7 @@ def p_starter(p):
     """ start   : part
                 | empty
     """
-    p[0] = myAST.TopAST(p[1]) if p[1] is not None else myAST.TopAST([])
+    p[0] = SynTree.FirstNode(p[1]) if p[1] is not None else SynTree.FirstNode([])
 
 
 def p_part(p):
@@ -45,7 +45,7 @@ def p_initializer_in(p):
                     | '{' initializer_list ',' '}'
     """
     if p[2] is None:
-        p[0] = myAST.ContentList(listType='InitList',elements=[])
+        p[0] = SynTree.ContentList(listType='InitList',elements=[])
     else:
         p[0] = p[2]
 
@@ -55,7 +55,7 @@ def p_initializer_list(p):
     """
     if len(p) == 2:
         init = p[1]
-        p[0] = myAST.ContentList(listType='InitList', elements=[init])
+        p[0] = SynTree.ContentList(listType='InitList', elements=[init])
     else:
         init = p[3]
         p[1].elements.append(init)
@@ -96,7 +96,10 @@ def p_type(p):
                                 | uorus type_specifier_can_unsigned
     """
     if len(p)>2:
-        p[0] = dict(qual=[], spec=[p[1],p[2]])
+        print(type(p[1]))
+        tmp = p[1] + p[2]
+        print(type(tmp))
+        p[0] = dict(qual=[], spec=[tmp])
     else:
         p[0] = dict(qual=[], spec=[p[1]])
         
@@ -140,7 +143,7 @@ def p_declaration(p):
     """
     decl_spec = p[1]
     struct = None
-    if isinstance(decl_spec['spec'][0], myAST.Struct):
+    if isinstance(decl_spec['spec'][0], SynTree.Struct):
         struct = decl_spec['spec'][0]
     init_decl_list = p[2]
 
@@ -149,26 +152,26 @@ def p_declaration(p):
     for init_decl in init_decl_list:
         type = init_decl['type']
         if struct is not None:
-            if isinstance(type, myAST.Identifier):
+            if isinstance(type, SynTree.Identifier):
                 args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': struct,
                        'init': init_decl['init']}
-                declaration = myAST.DeclarationNode(**args)
+                declaration = SynTree.Decl(**args)
 
             else:
-                while not isinstance(type.type, myAST.Identifier):
+                while not isinstance(type.type, SynTree.Identifier):
                     type = type.type
                 declname = type.type.name
                 type.type = struct
                 args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': init_decl['type'],
                        'init': None}
-                declaration = myAST.DeclarationNode(**args)
+                declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type, myAST.Identifier):
+            while not isinstance(type, SynTree.Identifier):
                 type = type.type
             type.spec = decl_spec['spec']
             args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': init_decl['type'],
                    'init': init_decl['init']}
-            declaration = myAST.DeclarationNode(**args)
+            declaration = SynTree.Decl(**args)
         p[0].insert(0, declaration)
 
 def p_declaration_list(p):
@@ -192,7 +195,7 @@ def p_identifier_list(p):
                         | identifier_list ',' identifier
     """
     if len(p) == 2:
-        p[0] = myAST.ContentList(listType='ParamList', elements=[p[1]])
+        p[0] = SynTree.ContentList(listType='ParamList', elements=[p[1]])
     else:
         p[1].elements.append(p[3])
         p[0] = p[1]
@@ -201,7 +204,7 @@ def p_identifier(p):
     """ identifier  : IDENTIFIER 
                     | inlinefunc """
     args = {'name': p[1], 'spec': None}
-    p[0] = myAST.Identifier(**args)
+    p[0] = SynTree.Identifier(**args)
     
 def p_inclinefunc(p):
     """ inlinefunc  : SIZEOF"""
@@ -210,11 +213,11 @@ def p_inclinefunc(p):
 # 跳转
 def p_back_statement_break(p):
     """ back_statement  : BREAK ';' """
-    p[0] = myAST.ControlLogic(logicType='Break')
+    p[0] = SynTree.ControlLogic(logicType='Break')
 
 def p_back_statement_continue(p):
     """ back_statement  : CONTINUE ';' """
-    p[0] = myAST.ControlLogic(logicType='Continue')
+    p[0] = SynTree.ControlLogic(logicType='Continue')
 
 def p_back_statement_return(p):
     """ back_statement  : RETURN ';'
@@ -222,10 +225,10 @@ def p_back_statement_return(p):
     """
     if len(p)==3:
         args = {"return_result": None}
-        p[0] = myAST.ControlLogic(logicType='Return',**args)
+        p[0] = SynTree.ControlLogic(logicType='Return',**args)
     else:
         args={"return_result":p[2]}
-        p[0] = myAST.ControlLogic(logicType='Return',**args)
+        p[0] = SynTree.ControlLogic(logicType='Return',**args)
 
 
 def p_variable_initable_list_orempty(p):
@@ -260,7 +263,7 @@ def p_arg_value_exp_list(p):
                                     | arg_value_exp_list ',' assignable_expression
     """
     if len(p) == 2:
-        p[0] = myAST.ContentList(listType='ExprList', elements=[p[1]])
+        p[0] = SynTree.ContentList(listType='ExprList', elements=[p[1]])
     else:
         p[1].elements.append(p[3])
         p[0] = p[1]
@@ -273,7 +276,7 @@ def p_assignable_expression(p):
         p[0] = p[1]
     else:
         args={'left':p[1],'right':p[3]}
-        p[0] = myAST.Operation(OpType='Assignment',OpName=p[2],**args)
+        p[0] = SynTree.Operation(OpType='Assignment',OpName=p[2],**args)
 
 def p_block_item_list_orempty(p):
     """block_item_list_orempty  : empty
@@ -323,8 +326,8 @@ def p_expression_orempty(p):
 
 def p_funcbody_statement(p):
     """ funcbody_statement : '{' block_item_list_orempty '}' """
-    p[0] = myAST.BlockStatement(
-        block_items=p[2])
+    p[0] = SynTree.Blocks(
+        blocks=p[2])
 
 def p_conditional_expression(p):
     """ conditional_expression  : binary_expression 
@@ -338,7 +341,7 @@ def p_ternary_expression(p):
     """
     if len(p) == 6:
         args={'condition':p[1],'true':p[3],'false':p[5]}
-        p[0] = myAST.Operation(OpType='TernaryOp',OpName=p[2],**args)
+        p[0] = SynTree.Operation(OpType='TernaryOp',OpName=p[2],**args)
     
         
 
@@ -346,25 +349,25 @@ def p_ternary_expression(p):
 def p_constant_int(p):
     """ constant    : INTEGER_CONSTANT
     """
-    p[0] = myAST.Constant(
+    p[0] = SynTree.Constant(
         'int', p[1], )
 
 def p_constant_char(p):
     """ constant    : CHAR_CONSTANT
     """
-    p[0] = myAST.Constant(
+    p[0] = SynTree.Constant(
         'char', p[1], )
 
 def p_constant_float(p):
     """ constant    : FLOAT_CONSTANT
     """
-    p[0] = myAST.Constant(
+    p[0] = SynTree.Constant(
         'float', p[1], )
 
 def p_bool_constant(p):
     """ constant    : BOOL_CONSTANT
     """
-    p[0] = myAST.Constant(
+    p[0] = SynTree.Constant(
         'bool', p[1], )
 
 def p_constant_expression(p):
@@ -402,7 +405,7 @@ def p_direct_variable_3(p):
     """
     print(3,p[3])
     args={'dim':p[3]}
-    arr = myAST.DeclArray(**args)
+    arr = SynTree.DeclArray(**args)
 
     p[0] = handle_decl_change(p[1], arr)
 
@@ -411,7 +414,7 @@ def p_direct_variable_6(p):
                             | direct_variable '(' identifier_list_orempty ')'
     """
     args={'args':p[3]}
-    func = myAST.DeclFunction(**args)
+    func = SynTree.DeclFunction(**args)
 
     p[0] = handle_decl_change(p[1], func)
 
@@ -436,8 +439,8 @@ def p_expression(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        if not isinstance(p[1], myAST.ContentList):
-            p[1] = myAST.ContentList(listType='ExprList', elements=[p[1]])
+        if not isinstance(p[1], SynTree.ContentList):
+            p[1] = SynTree.ContentList(listType='ExprList', elements=[p[1]])
 
         p[1].elements.append(p[3])
         p[0] = p[1]
@@ -445,7 +448,7 @@ def p_expression(p):
 def p_expression_statement(p):
     """ expression_statement : expression_orempty ';' """
     if p[1] is None:
-        p[0] = myAST.ControlLogic(logicType='EmptyStatement')
+        p[0] = SynTree.ControlLogic(logicType='EmptyStatement')
     else:
         p[0] = p[1]
 
@@ -455,33 +458,33 @@ def p_function_definition(p):
     #variale is func(int a, int b, ...)
     decl_spec = p[1]
     struct = None
-    if isinstance(decl_spec['spec'][0], myAST.Struct):
+    if isinstance(decl_spec['spec'][0], SynTree.Struct):
         struct = decl_spec['spec'][0]
     type = p[2]
 
     if struct is not None:
-        if isinstance(type, myAST.Identifier):
+        if isinstance(type, SynTree.Identifier):
             args={'name':type.name,'quals':decl_spec['qual'],'spec':decl_spec['spec'],'type':struct,'init':None}
-            declaration = myAST.DeclarationNode(**args)
+            declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type.type, myAST.Identifier):
+            while not isinstance(type.type, SynTree.Identifier):
                 type = type.type
             declname = type.type.name
             type.type = struct
             args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
                    'init': None}
-            declaration = myAST.DeclarationNode(**args)
+            declaration = SynTree.Decl(**args)
 
     else:
-        while not isinstance(type, myAST.Identifier):
+        while not isinstance(type, SynTree.Identifier):
             type = type.type
         type.spec = decl_spec['spec']
         args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
                'init': None}
-        declaration = myAST.DeclarationNode(**args)
+        declaration = SynTree.Decl(**args)
 
     fun_args = {'decl': declaration, 'param_decls': p[3], 'body': p[4]}
-    p[0] = myAST.FuncDef(**fun_args)
+    p[0] = SynTree.FuncDef(**fun_args)
 
 
 
@@ -490,7 +493,7 @@ def p_parameter_list(p):
                         | parameter_list ',' parameter_declaration
     """
     if len(p) == 2:
-        p[0] = myAST.ContentList(listType='ParamList', elements=[p[1]])
+        p[0] = SynTree.ContentList(listType='ParamList', elements=[p[1]])
     else:
         p[1].elements.append(p[3])
         p[0] = p[1]
@@ -500,33 +503,33 @@ def p_parameter_declaration(p):
     """
     decl_spec = p[1]
     struct = None
-    if isinstance(decl_spec['spec'][0], myAST.Struct):
+    if isinstance(decl_spec['spec'][0], SynTree.Struct):
         struct = decl_spec['spec'][0]
     type = p[2]
 
     if struct is not None:
-        if isinstance(type, myAST.Identifier):
+        if isinstance(type, SynTree.Identifier):
             args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
                    'type': struct,
                    'init': None}
-            declaration = myAST.DeclarationNode(**args)
+            declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type.type, myAST.Identifier):
+            while not isinstance(type.type, SynTree.Identifier):
                 type = type.type
             declname = type.type.name
             type.type = struct
             args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
                    'type': p[2],
                    'init': None}
-            declaration = myAST.DeclarationNode(**args)
+            declaration = SynTree.Decl(**args)
     else:
-        while not isinstance(type, myAST.Identifier):
+        while not isinstance(type, SynTree.Identifier):
             type = type.type
         type.spec = decl_spec['spec']
         args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
                'type': p[2],
                'init': None}
-        declaration = myAST.DeclarationNode(**args)
+        declaration = SynTree.Decl(**args)
 
     p[0] = declaration
 
@@ -537,9 +540,9 @@ def p_uscd_expression_1(p):
 
 def p_uscd_expression_2(p):
     """ uscd_expression : uscd_expression '[' expression ']' """
-    #p[0] = myAST.ArrayRef(p[1], p[3])
+    #p[0] = SynTree.ArrayRef(p[1], p[3])
     args = {'subscript': p[3]}
-    p[0] = myAST.Ref(refType='ArrayRef', name=p[1], **args)
+    p[0] = SynTree.Ref(refType='ArrayRef', name=p[1], **args)
 
 def p_uscd_expression_3(p):
     """ uscd_expression : uscd_expression '(' arg_value_exp_list ')'
@@ -549,15 +552,15 @@ def p_uscd_expression_3(p):
         args = {'name': p[1], 'args': p[3]}
     else:
         args = {'name': p[1], 'args': None}
-    p[0] = myAST.FuncCall(**args)
+    p[0] = SynTree.FunctionCall(**args)
 
 def p_uscd_expression_4(p):
     """ uscd_expression : uscd_expression PTR_OP identifier
     """
     args1 = {'name': p[3], 'spec': None}
-    field = myAST.Identifier(**args1)
+    field = SynTree.Identifier(**args1)
     args={'type':p[2],'field':field}
-    p[0] = myAST.Ref(refType='StructRef',name=p[1], **args)
+    p[0] = SynTree.Ref(refType='StructRef',name=p[1], **args)
 
 def p_unit_expression_id(p):
     """ unit_expression  : identifier """
@@ -585,32 +588,32 @@ def p_unit_expression_bracket(p):
 def p_branch_statement_if(p):
     """ branch_statement : IF '(' expression ')' statement """
     args={'judge':p[3], 'action1':p[5], 'action2': None}
-    p[0] = myAST.ControlLogic('If',**args)
+    p[0] = SynTree.ControlLogic('If',**args)
 
 def p_branch_statement_ifelse(p):
     """ branch_statement : IF '(' expression ')' statement ELSE statement """
     args = {'judge': p[3], 'action1': p[5], 'action2': p[7]}
-    p[0] = myAST.ControlLogic('If', **args)
+    p[0] = SynTree.ControlLogic('If', **args)
 
 
 def p_loop_statement(p):
     """ loop_statement : WHILE '(' expression ')' statement """
     args={'judge':p[3],'action':p[5]}
-    p[0] = myAST.ControlLogic(logicType='While',**args)
+    p[0] = SynTree.ControlLogic(logicType='While',**args)
 
 def p_loop_statement_2(p):
     """ loop_statement : FOR '(' parameter_declaration ';' expression_orempty ';' expression_orempty ')'  statement
                         | FOR '(' expression ';' expression_orempty ';' expression_orempty ')'  statement
                         | FOR '(' empty ';' expression_orempty ';' expression_orempty ')'  statement
     """
-    args={'first':p[3],'judge':p[5],'action':p[7]}
-    p[0] = myAST.ControlLogic(logicType='For',**args)
+    args={'first':p[3],'judge':p[5],'action':p[7], 'statement':p[9]}
+    p[0] = SynTree.ControlLogic(logicType='For',**args)
     
 def p_loop_statement_3(p):
     """ loop_statement : FOR '(' parameter_declaration '=' expression ';' expression_orempty ';' expression_orempty ')'  statement
     """
-    args={'first':p[3],'judge':p[7],'action':p[9]}
-    p[0] = myAST.ControlLogic(logicType='For',**args)
+    args={'first':p[3],'judge':p[7],'action':p[9], 'statement':p[11]}
+    p[0] = SynTree.ControlLogic(logicType='For',**args)
 
 
 def p_statement(p):
@@ -625,14 +628,14 @@ def p_statement(p):
 def p_struct_specifier_1(p):
     """ struct_specifier   : STRUCT identifier
     """
-    p[0] = myAST.Struct(
+    p[0] = SynTree.Struct(
         name=p[2].name,
         decls=None)
 
 def p_struct_specifier_2(p):
     """ struct_specifier : STRUCT '{' struct_declaration_list '}'
     """
-    p[0] = myAST.Struct(
+    p[0] = SynTree.Struct(
         name=None,
         decls=p[3])
 
@@ -644,7 +647,7 @@ def p_initializer_list_orempty(p):
 def p_struct_specifier_3(p):
     """ struct_specifier   : STRUCT identifier '{' struct_declaration_list '}'
     """
-    p[0] = myAST.Struct(
+    p[0] = SynTree.Struct(
         name=p[2].name,
         decls=p[4])
 
@@ -666,12 +669,12 @@ def p_struct_declaration(p):
     struct_decl_list = p[2]
     spec_qual = p[1]
     struct = None
-    if isinstance(spec_qual['spec'][0], myAST.Struct):
+    if isinstance(spec_qual['spec'][0], SynTree.Struct):
         struct = spec_qual['spec'][0]
 
     for decl in struct_decl_list:
         type = decl
-        while not isinstance(type, myAST.Identifier):
+        while not isinstance(type, SynTree.Identifier):
             type = type.type
         if struct is not None:
             type.type = struct
@@ -682,7 +685,7 @@ def p_struct_declaration(p):
         args = {'name': declname, 'quals': spec_qual['qual'], 'spec': spec_qual['spec'],
                'type': decl,
                'init': None}
-        declaration = myAST.DeclarationNode(**args)
+        declaration = SynTree.Decl(**args)
         p[0].insert(0, declaration)
 
 
@@ -698,7 +701,7 @@ def p_pointer(p):
                 | '*' pointer
     """
     args={'quals':p[1]}
-    type_ = myAST.DeclPointer(**args or [])
+    type_ = SynTree.DeclPointer(**args or [])
     if len(p) > 2:
         tail = p[2]
         while tail.type is not None:
@@ -735,13 +738,13 @@ def p_unary_expression_2(p):
                             | self_incdec cast_expression
     """
     args={'expression':p[2]}
-    p[0] = myAST.Operation(OpType='UnaryOp',OpName=p[1],**args)
+    p[0] = SynTree.Operation(OpType='UnaryOp',OpName=p[1],**args)
     
 def p_unary_expression_3(p):
     """ unary_expression    : cast_expression self_incdec 
     """
     args={'expression':p[1]}
-    p[0] = myAST.Operation(OpType='UnaryOp',OpName=p[2],**args)
+    p[0] = SynTree.Operation(OpType='UnaryOp',OpName=p[2],**args)
     
 
 def p_multiple_string(p):
@@ -749,7 +752,7 @@ def p_multiple_string(p):
                                 | multiple_string STRING_CONSTANT
     """
     if len(p) == 2:
-        p[0] = myAST.Constant(
+        p[0] = SynTree.Constant(
             'string', p[1])
     else:
         p[1].content = p[1].content[:-1] + p[2][1:]
@@ -780,7 +783,7 @@ def p_binary_expression(p):
         p[0] = p[1]
     else:
         args={'left':p[1],'right':p[3]}
-        p[0] = myAST.Operation(OpType='BinaryOp',OpName=p[2],**args)
+        p[0] = SynTree.Operation(OpType='BinaryOp',OpName=p[2],**args)
 
 def p_cast_expression_1(p):
     """ cast_expression : unary_expression """
@@ -791,7 +794,7 @@ def p_comment(p):
         comment : COMMENT1
                 | COMMENT2
     """
-    p[0]=myAST.CommentNode(p[1])
+    p[0]=SynTree.CommentNode(p[1])
     
 
 
@@ -877,7 +880,7 @@ if __name__ == '__main__':
         else:
             result = parser.parse(file_data, lexer=lexer)
             print(result.__str__())
-            ast_dict = result.build_tree()
+            ast_dict = result.generate_syntree()
             tree = json.dumps(ast_dict, indent=4)
             save_path = sys.argv[1][:-len('.cpp')]+'_syntree.json'
             if len(sys.argv) > 2:

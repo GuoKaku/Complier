@@ -1,29 +1,28 @@
 import sys
 class Node(object):
 
-    def sons(self):
+    def children(self):
         pass
 
-    def build_tree(self):
+    def generate_syntree(self):
 
-        r={}
-        r['name'] = self.__class__.__name__
+        tree={}
+        tree['name'] = self.__class__.__name__
+        tree['children'] = []
+        for (child_name, child) in self.children():
+             tree['children'].append(child.generate_syntree())
 
-        r['children'] = []
-        for (child_name, child) in self.sons():
-             r['children'].append(child.build_tree())
-
-        return r
+        return tree
 
 
-class TopAST(Node):
-    def __init__(self, unitList):
-        self.unitList = unitList
+class FirstNode(Node):
+    def __init__(self, nodes):
+        self.nodes = nodes
 
-    def sons(self):
+    def children(self):
         child_list = []
-        for id, u in enumerate(self.unitList or []):
-            child_list.append(("unit[%d]" % id, u))
+        for id, u in enumerate(self.nodes or []):
+            child_list.append(("note[%d]" % id, u))
         return tuple(child_list)
 
 
@@ -32,7 +31,7 @@ class Constant(Node):
         self.kind = kind
         self.content = content
 
-    def sons(self):
+    def children(self):
         return tuple([])
 
 
@@ -41,7 +40,7 @@ class Identifier(Node):
         self.name = kwargs['name']
         self.spec = kwargs['spec']
 
-    def sons(self):
+    def children(self):
         return tuple([])
 
 class Struct(Node):
@@ -49,22 +48,28 @@ class Struct(Node):
         self.name = name
         self.decls = decls
 
-    def sons(self):
+    def children(self):
         child_list = []
         for i, child in enumerate(self.decls or []):
             child_list.append(("declarations[%d]" % i, child))
         return tuple(child_list)
 
-class BlockStatement(Node):
-    def __init__(self, block_items):
-        self.block_items = block_items
+class Blocks(Node):
+    def __init__(self, blocks):
+        self.blocks = blocks
 
-    def sons(self):
+    def children(self):
         child_list = []
-        for i, child in enumerate(self.block_items or []):
-            child_list.append(("block_items[%d]" % i, child))
+        for i, child in enumerate(self.blocks or []):
+            child_list.append(("blocks[%d]" % i, child))
         return tuple(child_list)
-
+    
+class CommentNode(Node):
+    def __init__(self, content):
+        self.content = content
+        
+    def children(self):
+        return tuple([])
 
 class FuncDef(Node):
     def __init__(self, **kwargs):
@@ -72,7 +77,7 @@ class FuncDef(Node):
         self.param_decls = kwargs['param_decls']
         self.body = kwargs['body']
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.decl is not None: child_list.append(("decl", self.decl))
         if self.body is not None: child_list.append(("body", self.body))
@@ -80,12 +85,19 @@ class FuncDef(Node):
             child_list.append(("params[%d]" % i, child))
         return tuple(child_list)
 
-class FuncCall(Node):
+class EmptyStatement(Node):
+    def __init__(self):
+        pass
+    
+    def children(self):
+        return tuple([])
+    
+class FunctionCall(Node):
     def __init__(self, **kwargs):
         self.name = kwargs['name']
         self.args = kwargs['args']
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.name is not None: child_list.append(("name", self.name))
         if self.args is not None: child_list.append(("args", self.args))
@@ -108,13 +120,14 @@ class ControlLogic(Node):
         elif logicType == 'For':
             self.first = kwargs['first']
             self.judge = kwargs['judge']
-            self.action = kwargs['action']         
+            self.action = kwargs['action']  
+            self.statement = kwargs['statement']       
         elif logicType == 'Return':
             self.return_result = kwargs['return_result']
         elif logicType in ['Continue','Break','EmptyStatement']:
             pass
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.logicType == 'If':
             if self.judge is not None: child_list.append(("condition", self.judge))
@@ -138,7 +151,7 @@ class ContentList(Node):
         self.listType=listType # InitList,ParamList,ExprList
         self.elements=elements
 
-    def sons(self):
+    def children(self):
         child_list = []
         prefix_str='None'
         if self.listType == 'InitList':
@@ -151,6 +164,15 @@ class ContentList(Node):
             child_list.append((prefix_str+"[%d]" % i, son))
         return tuple(child_list)
 
+class InlineNode(Node):
+    def __init__(self, **kwargs):
+        self.content = kwargs['content']
+
+    def children(self):
+        child_list = []
+        if self.content is not None: child_list.append(("content", self.content))
+        return tuple([])
+    
 class Operation(Node):
 
     def __init__(self, OpType, OpName,**kwargs):
@@ -169,7 +191,7 @@ class Operation(Node):
             self.true = kwargs['true']
             self.false = kwargs['false']
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.OpType == 'BinaryOp':
             if self.left != None: child_list.append(("left", self.left))
@@ -185,6 +207,17 @@ class Operation(Node):
             if self.false != None: child_list.append(('false',self.false))
             
         return tuple(child_list)
+    
+class InitListNode(Node):
+    def __init__(self, **kwargs):
+        self.exprs = kwargs['exprs']
+
+    def children(self):
+        child_list = []
+        for i, child in enumerate(self.exprs or []):
+            child_list.append(("exprs[%d]" % i, child))
+        return tuple(child_list)
+    
 
 class Ref(Node):
     """
@@ -200,7 +233,7 @@ class Ref(Node):
             self.field = kwargs['field']
             self.attr_names = ('type',)
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.name is not None: child_list.append(("name", self.name))
         if self.refType == 'ArrayRef':
@@ -214,11 +247,81 @@ class ArrayRef(Node):
         self.name = name
         self.subscript = subscript
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.name is not None: child_list.append(("name", self.name))
         if self.subscript is not None: child_list.append(("subscript", self.subscript))
         return tuple(child_list)
+
+class StructRef(Node):
+    def __init__(self, name, field):
+        self.name = name
+        self.field = field
+
+    def children(self):
+        child_list = []
+        if self.name is not None: child_list.append(("name", self.name))
+        if self.field is not None: child_list.append(("field", self.field))
+        return tuple(child_list)
+    
+class DeclListNode(Node):
+    def __init__(self, **kwargs):
+        self.decls = kwargs['decls']
+
+    def children(self):
+        child_list = []
+        for i, child in enumerate(self.decls or []):
+            child_list.append(("decls[%d]" % i, child))
+        return tuple(child_list)
+    
+class DeclInitListNode(Node):
+    def __init__(self, **kwargs):
+        self.decls = kwargs['decls']
+        self.init = kwargs['init']
+
+    def children(self):
+        child_list = []
+        for i, child in enumerate(self.decls or []):
+            child_list.append(("decls[%d]" % i, child))
+        if self.init is not None: child_list.append(("init", self.init))
+        return tuple(child_list)
+
+
+
+class This(Node):
+    def __init__(self):
+        pass
+
+    def children(self):
+        return tuple([])
+
+class Template(Node):
+    def __init__(self, **kwargs):
+        self.name = kwargs['name']
+        self.params = kwargs['params']
+
+    def children(self):
+        child_list = []
+        if self.name is not None: child_list.append(("name", self.name))
+        if self.params is not None: child_list.append(("params", self.params))
+        return tuple(child_list)
+
+class Friend(Node):
+    def __init__(self, **kwargs):
+        self.decl = kwargs['decl']
+
+    def children(self):
+        child_list = []
+        if self.decl is not None: child_list.append(("decl", self.decl))
+        return tuple(child_list)
+
+class Build_in_function(Node):
+    def __init__(self, **kwargs):
+        self.name = kwargs['name']
+        self.type = kwargs['type']
+
+    def children(self):
+        return tuple([])
 
 
 class DeclPointer(Node):
@@ -226,8 +329,9 @@ class DeclPointer(Node):
         self.quals = kwargs['quals']
         self.type=None
 
-    def sons(self):
+    def children(self):
         return tuple([])
+    
 
 
 class DeclFunction(Node):
@@ -235,7 +339,7 @@ class DeclFunction(Node):
         self.args = kwargs['args']
         self.type = None
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.args is not None: child_list.append(("args", self.args))
         return tuple(child_list)
@@ -245,14 +349,14 @@ class DeclArray(Node):
         self.dim = kwargs['dim']
         self.type = None
 
-    def sons(self):
-        sonsList = []
-        if self.dim is not None: sonsList.append(("dim", self.dim))
-        return tuple(sonsList)
+    def children(self):
+        childrenList = []
+        if self.dim is not None: childrenList.append(("dim", self.dim))
+        return tuple(childrenList)
 
 
 
-class DeclarationNode(Node):
+class Decl(Node):
     def __init__(self, **kwargs):
         self.name = kwargs['name']
         self.quals = kwargs['quals']
@@ -260,15 +364,36 @@ class DeclarationNode(Node):
         self.type = kwargs['type']
         self.init = kwargs['init']
 
-    def sons(self):
+    def children(self):
         child_list = []
         if self.type is not None: child_list.append(("type", self.type))
         if self.init is not None: child_list.append(("init", self.init))
         return tuple(child_list)
     
-class CommentNode(Node):
-    def __init__(self, content):
-        self.content = content
-        
-    def sons(self):
+
+    
+class EmptyNode(Node):
+    def __init__(self):
+        pass
+    
+    def children(self):
         return tuple([])
+    
+
+
+
+class TypeNode(Node):
+    def __init__(self, **kwargs):
+        self.name = kwargs['name']
+        self.quals = kwargs['quals']
+        self.spec = kwargs['spec']
+        self.type = kwargs['type']
+        self.init = kwargs['init']
+
+    def children(self):
+        child_list = []
+        if self.type is not None: child_list.append(("type", self.type))
+        if self.init is not None: child_list.append(("init", self.init))
+        return tuple(child_list)
+    
+
