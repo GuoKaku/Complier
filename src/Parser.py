@@ -45,7 +45,7 @@ def p_initializer_in(item):
                     | '{' initializer_list ',' '}'
     """
     if item[2] is None:
-        item[0] = SynTree.ContentList(listType='InitList',elements=[])
+        item[0] = SynTree.ContentList(listType='Init',elements=[])
     else:
         item[0] = item[2]
 
@@ -55,7 +55,7 @@ def p_initializer_list(item):
     """
     if len(item) == 2:
         init = item[1]
-        item[0] = SynTree.ContentList(listType='InitList', elements=[init])
+        item[0] = SynTree.ContentList(listType='Init', elements=[init])
     else:
         init = item[3]
         item[1].elements.append(init)
@@ -195,13 +195,13 @@ def p_identifier_list(item):
                         | identifier_list ',' identifier
     """
     if len(item) == 2:
-        item[0] = SynTree.ContentList(listType='ParamList', elements=[item[1]])
+        item[0] = SynTree.ContentList(listType='Param', elements=[item[1]])
     else:
         item[1].elements.append(item[3])
         item[0] = item[1]
 
 def p_identifier(item):
-    """ identifier  : IDENTIFIER 
+    """ identifier  : ID 
                     | inlinefunc """
     args = {'name': item[1], 'spec': None}
     item[0] = SynTree.Id(**args)
@@ -246,16 +246,16 @@ def p_assignable_expression_orempty(item):
 
 def p_assign_operator(item):
     ''' assign_operator : '='
-                            | MUL_ASSIGN
-                            | DIV_ASSIGN
-                            | MOD_ASSIGN
-                            | ADD_ASSIGN
-                            | SUB_ASSIGN
-                            | LEFT_ASSIGN
-                            | RIGHT_ASSIGN
-                            | AND_ASSIGN
-                            | XOR_ASSIGN
-                            | OR_ASSIGN '''
+                            | MUL_ASG
+                            | DIV_ASG
+                            | MOD_ASG
+                            | ADD_ASG
+                            | SUB_ASG
+                            | LEFT_ASG
+                            | RIGHT_ASG
+                            | AND_ASG
+                            | XOR_ASG
+                            | OR_ASG '''
     item[0] = item[1]
 
 def p_arg_value_exp_list(item):
@@ -263,7 +263,7 @@ def p_arg_value_exp_list(item):
                                     | arg_value_exp_list ',' assignable_expression
     """
     if len(item) == 2:
-        item[0] = SynTree.ContentList(listType='ExprList', elements=[item[1]])
+        item[0] = SynTree.ContentList(listType='Expression', elements=[item[1]])
     else:
         item[1].elements.append(item[3])
         item[0] = item[1]
@@ -276,7 +276,7 @@ def p_assignable_expression(item):
         item[0] = item[1]
     else:
         args={'left':item[1],'right':item[3]}
-        item[0] = SynTree.Operation(OpType='Assignment',OpName=item[2],**args)
+        item[0] = SynTree.Operation(OperationType='Assignment',OperationName=item[2],**args)
 
 def p_block_item_list_orempty(item):
     """block_item_list_orempty  : empty
@@ -341,31 +341,31 @@ def p_ternary_expression(item):
     """
     if len(item) == 6:
         args={'condition':item[1],'true':item[3],'false':item[5]}
-        item[0] = SynTree.Operation(OpType='TernaryOp',OpName=item[2],**args)
+        item[0] = SynTree.Operation(OperationType='TernaryOp',OperationName=item[2],**args)
     
         
 
 
 def p_constant_int(item):
-    """ constant    : INTEGER_CONSTANT
+    """ constant    : INTEGER_CONST
     """
     item[0] = SynTree.Constant(
         'int', item[1], )
 
 def p_constant_char(item):
-    """ constant    : CHAR_CONSTANT
+    """ constant    : CHAR_CONST
     """
     item[0] = SynTree.Constant(
         'char', item[1], )
 
 def p_constant_float(item):
-    """ constant    : FLOAT_CONSTANT
+    """ constant    : FLOAT_CONST
     """
     item[0] = SynTree.Constant(
         'float', item[1], )
 
 def p_bool_constant(item):
-    """ constant    : BOOL_CONSTANT
+    """ constant    : BOOL_CONST
     """
     item[0] = SynTree.Constant(
         'bool', item[1], )
@@ -439,7 +439,7 @@ def p_expression(item):
     num=len(item)
     if num != 2:
         if not isinstance(item[1], SynTree.ContentList):
-            item[1] = SynTree.ContentList(listType='ExprList', elements=[item[1]])
+            item[1] = SynTree.ContentList(listType='Expression', elements=[item[1]])
         item[1].elements.append(item[3])
         item[0] = item[1]
     else:
@@ -484,7 +484,7 @@ def p_function_definition(item):
                'init': None}
         declaration = SynTree.Decl(**args)
 
-    fun_args = {'decl': declaration, 'param_decls': item[3], 'body': item[4]}
+    fun_args = {'decl': declaration, 'param_args': item[3], 'body': item[4]}
     item[0] = SynTree.FuncDef(**fun_args)
 
 
@@ -494,7 +494,7 @@ def p_parameter_list(item):
                         | parameter_list ',' parameter_declaration
     """
     if len(item) == 2:
-        item[0] = SynTree.ContentList(listType='ParamList', elements=[item[1]])
+        item[0] = SynTree.ContentList(listType='Param', elements=[item[1]])
     else:
         item[1].elements.append(item[3])
         item[0] = item[1]
@@ -559,8 +559,8 @@ def p_uscd_expression_4(item):
     """ uscd_expression : uscd_expression PTR_OP identifier
     """
     args1 = {'name': item[3], 'spec': None}
-    field = SynTree.Id(**args1)
-    args={'type':item[2],'field':field}
+    reign = SynTree.Id(**args1)
+    args={'type':item[2],'reign':reign}
     item[0] = SynTree.Ref(refType='StructRef',name=item[1], **args)
 
 def p_unit_expression_id(item):
@@ -631,14 +631,14 @@ def p_struct_specifier_1(item):
     """
     item[0] = SynTree.Struct(
         name=item[2].name,
-        decls=None)
+        args=None)
 
 def p_struct_specifier_2(item):
     """ struct_specifier : STRUCT '{' struct_declaration_list '}'
     """
     item[0] = SynTree.Struct(
         name=None,
-        decls=item[3])
+        args=item[3])
 
 def p_initializer_list_orempty(item):
     """initializer_list_orempty : empty
@@ -650,7 +650,7 @@ def p_struct_specifier_3(item):
     """
     item[0] = SynTree.Struct(
         name=item[2].name,
-        decls=item[4])
+        args=item[4])
 
 # Combine all declarations into a single list
 #
@@ -739,18 +739,18 @@ def p_unary_expression_2(item):
                             | self_incdec cast_expression
     """
     args={'expression':item[2]}
-    item[0] = SynTree.Operation(OpType='UnaryOp',OpName=item[1],**args)
+    item[0] = SynTree.Operation(OperationType='UnaryOp',OperationName=item[1],**args)
     
 def p_unary_expression_3(item):
     """ unary_expression    : cast_expression self_incdec 
     """
     args={'expression':item[1]}
-    item[0] = SynTree.Operation(OpType='UnaryOp',OpName=item[2],**args)
+    item[0] = SynTree.Operation(OperationType='UnaryOp',OperationName=item[2],**args)
     
 
 def p_multiple_string(item):
-    """ multiple_string  : STRING_CONSTANT
-                                | multiple_string STRING_CONSTANT
+    """ multiple_string  : STRING_CONST
+                                | multiple_string STRING_CONST
     """
     if len(item) == 2:
         item[0] = SynTree.Constant(
@@ -784,7 +784,7 @@ def p_binary_expression(item):
         item[0] = item[1]
     else:
         args={'left':item[1],'right':item[3]}
-        item[0] = SynTree.Operation(OpType='BinaryOp',OpName=item[2],**args)
+        item[0] = SynTree.Operation(OperationType='BinaryOp',OperationName=item[2],**args)
 
 def p_cast_expression_1(item):
     """ cast_expression : unary_expression """
@@ -817,18 +817,6 @@ def p_cpp_advanced(item):
     | NAMESPACE
     | NEW
     | OPERATOR
-    | PRIVATE
-    | PROTECTED
-    | PUBLIC
-    | REINTERPRET_CAST
-    | STATIC_CAST
-    | TEMPLATE
-    | THIS
-    | THROW
-    | TRY
-    | TYPEID
-    | TYPENAME
-    | USING
     | VIRTUAL
     | AUTO
     | CONST

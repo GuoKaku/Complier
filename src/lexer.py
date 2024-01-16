@@ -4,45 +4,148 @@ import sys
 from pretreatment import Pretreatment,verbose
 
 
-
-
-
 tokens = (
-    'IDENTIFIER',
+    'ID',
+    
+    'RIGHT_ASG',
+    'LEFT_ASG',
+    'MOD_ASG',
+    'ADD_ASG',
+    'AND_ASG',
+    'XOR_ASG',
+    'OR_ASG',
+    'SUB_ASG',
+    'MUL_ASG',
+    'DIV_ASG',
 
     'COMMENT1',
     'COMMENT2',
+    
+    'EQ_OP',
+    'NEQ_OP',
 
-    'FLOAT_CONSTANT',
-    'INTEGER_CONSTANT',
-    'STRING_CONSTANT',
-    'CHAR_CONSTANT',
-    'BOOL_CONSTANT',
-
-    'RIGHT_ASSIGN',
-    'LEFT_ASSIGN',
-    'ADD_ASSIGN',
-    'SUB_ASSIGN',
-    'MUL_ASSIGN',
-    'DIV_ASSIGN',
-    'MOD_ASSIGN',
-    'AND_ASSIGN',
-    'XOR_ASSIGN',
-    'OR_ASSIGN',
-
-    'RIGHT_OP',
-    'LEFT_OP',
     'INC_OP',
     'DEC_OP',
     'PTR_OP',
     'AND_OP',
     'OR_OP',
-    'EQ_OP',
-    'NEQ_OP',
-    'LTE',
+
+    'RIGHT_OP',
+    'LEFT_OP',
+
+    
     'GTE',
-    'BUILT_IN_FUNCTION'
+    'LTE',
+
+    'BUILT_IN_FUNCTION',
+    
+    'CHAR_CONST',
+    'BOOL_CONST', 
+    'FLOAT_CONST',
+    'INTEGER_CONST',
+    'STRING_CONST',
+
 )
+
+
+
+
+t_RIGHT_OP = r'>>'
+t_LEFT_OP = r'<<'
+t_INC_OP = r'\+\+'
+t_DEC_OP = r'--'
+t_PTR_OP = r'->'
+t_AND_OP = r'&&'
+t_OR_OP = r'\|\|'
+t_EQ_OP = r"=="
+t_NEQ_OP = r"!="
+
+t_RIGHT_ASG = r'>>='
+t_LEFT_ASG = r'<<='
+t_XOR_ASG = r'\^='
+t_OR_ASG = r'\|='
+
+t_ADD_ASG = r'\+='
+t_SUB_ASG = r'-='
+t_MUL_ASG = r'\*='
+
+
+t_LTE = r"\<\="
+t_GTE = r"\>\="
+
+t_DIV_ASG = r'/='
+t_MOD_ASG = r'%='
+t_AND_ASG = r'&='
+
+t_ignore  = ' \t\v\f'
+
+
+literals = "+-*/%|&~^<>=!?()[]{}.,;:\\\'\""
+
+
+# C++ ID
+def t_ID(t):
+    r"[_a-zA-Z][_a-zA-Z0-9]*"
+    if t.value.lower() in reserved_keywords:
+        t.type = reserved_keywords[t.value.lower()]
+    return t
+
+# 匹配以单引号包围的字符常量
+def t_CHAR_CONST(t):
+    r'(L)?\'([^\\\n]|(\\(.|\n)))*?\''
+    return t
+
+
+# 匹配不同形式的整数常量，包括十进制、十六进制
+# 前一部分匹配数字，后一部分匹配代表四种可能的后缀组合，包括 ul、lu、u 或 l
+def t_INTEGER_CONST(t):
+    r'(((((0x)|(0X))[0-9a-fA-F]+)|(\d+))([uU][lL]|[lL][uU]|[uU]|[lL])?)'
+    return t
+
+# 匹配小数点表示的浮点数和匹配科学计数法表示的浮点数
+# 小数点表示中支持指数表示
+def t_FLOAT_CONST(t):
+    r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+    return t
+
+
+# bool类型
+def t_BOOL_CONST(t):
+    r'(true|false)'
+    return t
+
+# 被“”修饰的字符串
+def t_STRING_CONST(t):
+    r'"(\\.|[^\\"])*"'
+    return t
+
+
+
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
+
+# 错误处理
+def t_error(t):
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
+
+# \\类型的注释
+def t_COMMENT1(t):
+    r'(//.*?(\n|$))'
+    return t
+
+# /**/类型的注释
+def t_COMMENT2(t):
+    r'(/\*(.|\n)*?\*/)'
+    t.value = t.value.replace(' ','')
+    t.value = t.value.replace('\n',' ')
+    return t
+
+
+
+
 
 reserved_keywords = {
     'asm': 'ASM',
@@ -115,107 +218,19 @@ reserved_keywords = {
 tokens = tokens + tuple(reserved_keywords.values())
 
 
-t_RIGHT_ASSIGN = r'>>='
-t_LEFT_ASSIGN = r'<<='
-t_ADD_ASSIGN = r'\+='
-t_SUB_ASSIGN = r'-='
-t_MUL_ASSIGN = r'\*='
-t_DIV_ASSIGN = r'/='
-t_MOD_ASSIGN = r'%='
-t_AND_ASSIGN = r'&='
-t_XOR_ASSIGN = r'\^='
-t_OR_ASSIGN = r'\|='
-
-t_RIGHT_OP = r'>>'
-t_LEFT_OP = r'<<'
-t_INC_OP = r'\+\+'
-t_DEC_OP = r'--'
-t_PTR_OP = r'->'
-t_AND_OP = r'&&'
-t_OR_OP = r'\|\|'
-t_EQ_OP = r"=="
-t_NEQ_OP = r"!="
-
-t_LTE = r"\<\="
-t_GTE = r"\>\="
-
-t_ignore  = ' \t\v\f'
-
-
-literals = "+-*/%|&~^<>=!?()[]{}.,;:\\\'\""
-
-
-# 匹配不同形式的整数常量，包括十进制、十六进制
-# 前一部分匹配数字，后一部分匹配代表四种可能的后缀组合，包括 ul、lu、u 或 l
-def t_INTEGER_CONSTANT(t):
-    r'(((((0x)|(0X))[0-9a-fA-F]+)|(\d+))([uU][lL]|[lL][uU]|[uU]|[lL])?)'
-    return t
-
-# 匹配小数点表示的浮点数和匹配科学计数法表示的浮点数
-# 小数点表示中支持指数表示
-def t_FLOAT_CONSTANT(t):
-    r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
-    return t
-
-# 匹配以单引号包围的字符常量
-def t_CHAR_CONSTANT(t):
-    r'(L)?\'([^\\\n]|(\\(.|\n)))*?\''
-    return t
-
-# bool类型
-def t_BOOL_CONSTANT(t):
-    r'(true|false)'
-    return t
-
-# 被“”修饰的字符串
-def t_STRING_CONSTANT(t):
-    r'"(\\.|[^\\"])*"'
-    return t
-
-# C++ IDENTIFIER
-def t_IDENTIFIER(t):
-    r"[_a-zA-Z][_a-zA-Z0-9]*"
-    if t.value.lower() in reserved_keywords:
-        t.type = reserved_keywords[t.value.lower()]
-    return t
-
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
-
-
-# 错误处理
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
-
-# \\类型的注释
-def t_COMMENT1(t):
-    r'(//.*?(\n|$))'
-    return t
-
-# /**/类型的注释
-def t_COMMENT2(t):
-    r'(/\*(.|\n)*?\*/)'
-    t.value = t.value.replace(' ','')
-    t.value = t.value.replace('\n',' ')
-    return t
-
 lexer = lex.lex()
 
 if __name__ == '__main__':
-
     if len(sys.argv) > 1:  # specify file
         try:
             pretreatmenter=Pretreatment()
-            file_data, ok=pretreatmenter.Pretreatment(sys.argv[1])
+            cooked_file, ok=pretreatmenter.Pretreatment(sys.argv[1])
             if verbose:
-                print(f'file_data: {file_data}')
-            
+                print(f'cooked_file: {cooked_file}')
             if ok is not True:
-                print('Pretreatment error with file:', file_data)
+                print('Pretreatment error with file:', cooked_file)
             else:
-                lexer.input(file_data)
+                lexer.input(cooked_file)
                 while True:
                     token = lexer.token()
                     if not token:

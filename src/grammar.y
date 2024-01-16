@@ -23,15 +23,15 @@ variable  : direct_variable | pointer direct_variable   /* int a, char* chp , ..
 direct_variable   : identifier | direct_variable '[' assignable_expression_orempty ']' | direct_variable '(' parameter_list ')' | direct_variable '(' identifier_list_orempty ')'
 parameter_list  : parameter_declaration | parameter_list ',' parameter_declaration
 parameter_declaration   : type variable 
-identifier  : IDENTIFIER
+identifier  : ID
 pointer : '*' | '*' pointer
-constant    : INTEGER_CONSTANT | CHAR_CONSTANT | FLOAT_CONSTANT | BOOL_CONSTANT 
+constant    : INTEGER_CONST | CHAR_CONST | FLOAT_CONST | BOOL_CONST 
 
 initializer : assignable_expression |'{' initializer_list_orempty '}' | '{' initializer_list ',' '}'
 initializer_list_orempty : empty | initializer_list
 initializer_list    : initializer | initializer_list ',' initializer
 assignable_expression   : conditional_expression | variable assign_operator assignable_expression
-assign_operator : '=' | MUL_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | ADD_ASSIGN | SUB_ASSIGN | LEFT_ASSIGN | RIGHT_ASSIGN | AND_ASSIGN | XOR_ASSIGN | OR_ASSIGN 
+assign_operator : '=' | MUL_ASG | DIV_ASG | MOD_ASG | ADD_ASG | SUB_ASG | LEFT_ASG | RIGHT_ASG | AND_ASG | XOR_ASG | OR_ASG 
 
 expression  : assignable_expression | expression ',' assignable_expression
 conditional_expression  : binary_expression | ternary_expression
@@ -41,7 +41,7 @@ cast_expression : unary_expression
 unary_expression    : uscd_expression | unary_operator cast_expression
 uscd_expression : unit_expression | uscd_expression '[' expression ']'  | uscd_expression '(' arg_value_exp_list ')' | uscd_expression '(' ')' | uscd_expression PTR_OP identifier
 unit_expression  : identifier | constant | multiple_string | '(' expression ')' | inlinefunc
-multiple_string  : STRING_CONSTANT | multiple_string STRING_CONSTANT
+multiple_string  : STRING_CONST | multiple_string STRING_CONST
 unary_operator : '&' | '*' | '+' | '-' | '~' | '!' 
 inlinefunc : SIZEOF
 
