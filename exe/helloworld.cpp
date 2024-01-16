@@ -5,13 +5,9 @@
 int main()
 {
 	    if(true || false){
-	    printf("hello world");
+	    	printf("hello world");
 	    }
-	    
-	    //goodd
-	    /*
-	    nice
-	    */
+
 	    
 	    return 0;
 }

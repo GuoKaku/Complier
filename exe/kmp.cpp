@@ -41,11 +41,11 @@ int main() {
     char pattern[100];
 
     printf("请输入文本串: ");
-    fgets(text, sizeof(text), stdin);
+    fgets(text, 100, stdin);
     text[strcspn(text, "\n")] = '\0'; // 去除末尾的换行符
 
     printf("请输入模式串: ");
-    fgets(pattern, sizeof(pattern), stdin);
+    fgets(pattern, 1000, stdin);
     pattern[strcspn(pattern, "\n")] = '\0'; // 去除末尾的换行符
 
     int next[9999];
