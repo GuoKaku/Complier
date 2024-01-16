@@ -224,5 +224,5 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
     else:
-        print("please input c++ file path")
+        print("please specify the c++ file path")
 

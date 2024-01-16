@@ -1,0 +1,285 @@
+{
+    "name": "FirstNode",
+    "children": [
+        {
+            "name": "FuncDef",
+            "children": [
+                {
+                    "name": "Decl",
+                    "children": [
+                        {
+                            "name": "DeclFunction",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Blocks",
+                    "children": [
+                        {
+                            "name": "Decl",
+                            "children": [
+                                {
+                                    "name": "Identifier",
+                                    "children": []
+                                },
+                                {
+                                    "name": "Constant",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Decl",
+                            "children": [
+                                {
+                                    "name": "Identifier",
+                                    "children": []
+                                },
+                                {
+                                    "name": "Constant",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Decl",
+                            "children": [
+                                {
+                                    "name": "DeclArray",
+                                    "children": [
+                                        {
+                                            "name": "Constant",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "FunctionCall",
+                            "children": [
+                                {
+                                    "name": "Identifier",
+                                    "children": []
+                                },
+                                {
+                                    "name": "ContentList",
+                                    "children": [
+                                        {
+                                            "name": "Constant",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "FunctionCall",
+                            "children": [
+                                {
+                                    "name": "Identifier",
+                                    "children": []
+                                },
+                                {
+                                    "name": "ContentList",
+                                    "children": [
+                                        {
+                                            "name": "Identifier",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Operation",
+                            "children": [
+                                {
+                                    "name": "Identifier",
+                                    "children": []
+                                },
+                                {
+                                    "name": "FunctionCall",
+                                    "children": [
+                                        {
+                                            "name": "Identifier",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "ContentList",
+                                            "children": [
+                                                {
+                                                    "name": "Identifier",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "ControlLogic",
+                            "children": [
+                                {
+                                    "name": "Operation",
+                                    "children": [
+                                        {
+                                            "name": "Identifier",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "Identifier",
+                                            "children": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "Blocks",
+                                    "children": [
+                                        {
+                                            "name": "ControlLogic",
+                                            "children": [
+                                                {
+                                                    "name": "Operation",
+                                                    "children": [
+                                                        {
+                                                            "name": "Ref",
+                                                            "children": [
+                                                                {
+                                                                    "name": "Identifier",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "name": "Identifier",
+                                                                    "children": []
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "Ref",
+                                                            "children": [
+                                                                {
+                                                                    "name": "Identifier",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "name": "Operation",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "Operation",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "Identifier",
+                                                                                    "children": []
+                                                                                },
+                                                                                {
+                                                                                    "name": "Identifier",
+                                                                                    "children": []
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "Constant",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "Blocks",
+                                                    "children": [
+                                                        {
+                                                            "name": "FunctionCall",
+                                                            "children": [
+                                                                {
+                                                                    "name": "Identifier",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "name": "ContentList",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "Constant",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "ControlLogic",
+                                                            "children": [
+                                                                {
+                                                                    "name": "Constant",
+                                                                    "children": []
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "Operation",
+                                            "children": [
+                                                {
+                                                    "name": "Identifier",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "name": "Operation",
+                                                    "children": [
+                                                        {
+                                                            "name": "Identifier",
+                                                            "children": []
+                                                        },
+                                                        {
+                                                            "name": "Constant",
+                                                            "children": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "FunctionCall",
+                            "children": [
+                                {
+                                    "name": "Identifier",
+                                    "children": []
+                                },
+                                {
+                                    "name": "ContentList",
+                                    "children": [
+                                        {
+                                            "name": "Constant",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "ControlLogic",
+                            "children": [
+                                {
+                                    "name": "Constant",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

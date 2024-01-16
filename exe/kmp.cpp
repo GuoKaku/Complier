@@ -1,60 +1,65 @@
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 
-// 计算next数组
-void compute_next(char* pattern, int* next) {
-    int i, j;
-    int m = strlen(pattern);
-    next[0] = -1; // 初始化
-    for (i = 1, j = -1; i < m; i++) {
-        while (j >= 0 && pattern[i] != pattern[j + 1]) {
+char text[4096], pattern[4096];
+int next[4096];
+
+void getnext(){
+    next[0] = -1;
+    int i = 0, j = -1;
+    while (i < strlen(pattern) - 1){
+        if ((j == -1) || (pattern[i] == pattern[j]))
+        {
+            i = i + 1;
+            j = j + 1;
+            if (pattern[i] == pattern[j])
+                next[i] = next[j];
+            else
+                next[i] = j;
+        }
+        else
             j = next[j];
-        }
-        if (pattern[i] == pattern[j + 1]) {
-            j++;
-        }
-        next[i] = j;
     }
+    return;
 }
 
-// KMP算法
-int kmp(char* text, char* pattern, int* next) {
-    int i, j;
-    int n = strlen(text);
-    int m = strlen(pattern);
-    for (i = 0, j = -1; i < n; i++) {
-        while (j >= 0 && text[i] != pattern[j + 1]) {
+int kmp(int start){
+    int p_len = strlen(pattern), t_len = strlen(text), i = start, j = 0;
+    while ((i < t_len) && (j < p_len))
+    {
+        if ((j == -1) || (text[i] == pattern[j])){
+            i = i + 1;
+            j = j + 1;
+        }
+        else
             j = next[j];
-        }
-        if (text[i] == pattern[j + 1]) {
-            j++;
-        }
-        if (j == m - 1) { // 匹配成功
-            return i - j;
-        }
     }
-    return -1; // 匹配失败
+    if (j == p_len)
+        return i - j;
+    else
+        return -1;
+    return -1;
 }
 
-int main() {
-    char text[100];
-    char pattern[100];
+int main(){
+    printf("Enter the text here: ");
+    gets(text);
+    printf("Enter the pattern here: ");
+    gets(pattern);
+    getnext();
 
-    printf("请输入文本串: ");
-    fgets(text, 100, stdin);
-    text[strcspn(text, "\n")] = '\0'; // 去除末尾的换行符
-
-    printf("请输入模式串: ");
-    fgets(pattern, 1000, stdin);
-    pattern[strcspn(pattern, "\n")] = '\0'; // 去除末尾的换行符
-
-    int next[9999];
-    compute_next(pattern, next);
-    int pos = kmp(text, pattern, next);
-    if (pos != -1) {
-        printf("模式串在位置 %d 处匹配成功\n", pos);
-    } else {
-        printf("模式串未找到\n");
+    int start = 0, i = 0, note = 0, len = strlen(text);
+    while (start < len){
+        i = kmp(start);
+        if (i != -1){
+            printf("position: %d\n", i + 1);
+            start = i + 1;
+            note = 1;
+        }
+        else
+            break;
     }
+    if (!note)
+        printf("there is no pattern in text");
     return 0;
 }
