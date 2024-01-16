@@ -96,9 +96,9 @@ def p_type(p):
                                 | uorus type_specifier_can_unsigned
     """
     if len(p)>2:
-        print(type(p[1]))
+        # print(type(p[1]))
         tmp = p[1] + p[2]
-        print(type(tmp))
+        # print(type(tmp))
         p[0] = dict(qual=[], spec=[tmp])
     else:
         p[0] = dict(qual=[], spec=[p[1]])
@@ -403,7 +403,7 @@ def p_direct_variable_1(p):
 def p_direct_variable_3(p):
     """ direct_variable   : direct_variable '[' assignable_expression_orempty ']'
     """
-    print(3,p[3])
+    # print(3,p[3])
     args={'dim':p[3]}
     arr = SynTree.DeclArray(**args)
 
@@ -879,7 +879,7 @@ if __name__ == '__main__':
             print('pretreatment error')
         else:
             result = parser.parse(file_data, lexer=lexer)
-            print(result.__str__())
+            # print(result.__str__())
             ast_dict = result.generate_syntree()
             tree = json.dumps(ast_dict, indent=4)
             save_path = sys.argv[1][:-len('.cpp')]+'_syntree.json'

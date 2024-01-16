@@ -55,18 +55,18 @@ class Tool(object):
                 # self.visit(unit, flag=1)
                 self.visit_Decl(child, flag=1)
             elif isinstance(child, SynTree.CommentNode):
-                print(f'content:{child.content}')
+                # print(f'content:{child.content}')
                 self.tool_global_comments.append(child.content)
                 self.visit_CommentNode(child, flag=0)
-                # print(f'visit_FirstNode child:{child}')
+                # # print(f'visit_FirstNode child:{child}')
 
     def visit_Decl(self, ast_node, flag=0):
         """
             declorcom   : external_declaration
 
         """
-        print(f'visit_Decl ast_node.name:{ast_node.name}, next type:{ast_node.type}, quals:{ast_node.quals}, spec:{ast_node.spec}, init:{ast_node.init}')
-        print(f'self.tool_builders:{self.tool_builders}')
+        # print(f'visit_Decl ast_node.name:{ast_node.name}, next type:{ast_node.type}, quals:{ast_node.quals}, spec:{ast_node.spec}, init:{ast_node.init}')
+        # print(f'self.tool_builders:{self.tool_builders}')
         if ast_node.name in self.tool_used_memory.keys() or ast_node.name in self.tool_arguments.keys() or ast_node.name in self.tool_global_variables.keys():
             raise RuntimeError("Duplicate declaration: " + ast_node.name)
         # dec = self.allocate_variable(ast_node, flag, [])
@@ -76,40 +76,40 @@ class Tool(object):
         while (type(temp_node) == SynTree.DeclArray) or (type(temp_node) == SynTree.DeclFunction) or (
                 type(temp_node) == SynTree.DeclPointer) or (type(temp_node) == SynTree.Decl):
             modifier_list.append(temp_node)
-            print(f'modifier_list:{modifier_list}')
+            # print(f'modifier_list:{modifier_list}')
             temp_node = temp_node.type
         if type(temp_node) == SynTree.Identifier:
-            print(f'temp_node_spec:{temp_node.spec[0]}')
+            # print(f'temp_node_spec:{temp_node.spec[0]}')
             if temp_node.spec[0] in ['int', 'char', 'void', 'float', 'double', 'unsignedint']:
                 iden_type = self.get_regular_type(temp_node.spec[0])
             elif temp_node.spec[0] in self.tool_type_defined:
                 iden_type = self.tool_module.context.get_identified_type(temp_node.spec[0].name)
             # iden_type = self.get_element_type(temp_node.spec[0])
-            print(f'iden_type:{iden_type}')
+            # print(f'iden_type:{iden_type}')
             iden_name = modifier_list.pop(0).name
-            print(f'modifier_list:{modifier_list}, iden_name:{iden_name}')
+            # print(f'modifier_list:{modifier_list}, iden_name:{iden_name}')
             for modifier in modifier_list:
                 iden_type = self.return_content(modifier, iden_type)
-                print(f'iden_type:{iden_type}, modifier:{modifier}')
+                # print(f'iden_type:{iden_type}, modifier:{modifier}')
             dec = self.handle_allocate_indenti_by_flag(temp_node, iden_type, iden_name, flag, modifier_list)
         elif type(temp_node) == SynTree.Struct:
             dec = self.allocate_struct(temp_node, flag, modifier_list)
 
-        print(f'dec:{dec}')
+        # print(f'dec:{dec}')
         # self.handle_decl_args(ast_node, flag)
-        print(f'self.tool_builders:{self.tool_builders}')
+        # print(f'self.tool_builders:{self.tool_builders}')
 
         if flag == 0:
             if ast_node.init:
-                print(f'ast_node.init:{ast_node.init}')
+                # print(f'ast_node.init:{ast_node.init}')
                 self.tool_builders.store(self.visit(ast_node.init, 1), self.tool_used_memory[ast_node.name])
         elif flag == 1:
             if ast_node.init:
                 if not self.tool_global_variables[ast_node.name].initializer:
                     self.tool_global_variables[ast_node.name].initializer = self.visit(ast_node.init, ast_node.name)
-                    print(f'flag=1 ast_node.name:{ast_node.name}, self.tool_global_variables:{self.tool_global_variables}, self.tool_global_variables[ast_node.name]:{self.tool_global_variables[ast_node.name]}')
+                    # print(f'flag=1 ast_node.name:{ast_node.name}, self.tool_global_variables:{self.tool_global_variables}, self.tool_global_variables[ast_node.name]:{self.tool_global_variables[ast_node.name]}')
             else:
-                print(f'self.tool_used_memory:{self.tool_used_memory}')
+                # print(f'self.tool_used_memory:{self.tool_used_memory}')
                 self.tool_global_variables[ast_node.name].align = 4
                 self.tool_global_variables[ast_node.name].linkage = "common"
         
@@ -121,20 +121,20 @@ class Tool(object):
 
     def visit_FuncDef(self, ast_node, flag=0):
         self.tool_arguments.clear()
-        print(f'visit_FuncDef ast_node.decl:{ast_node.decl}, ast_node.body:{ast_node.body}, param_decls:{ast_node.param_decls}, flag:{flag}')
+        # print(f'visit_FuncDef ast_node.decl:{ast_node.decl}, ast_node.body:{ast_node.body}, param_decls:{ast_node.param_decls}, flag:{flag}')
         # ast_node.decl:<cAST.Decl object at 0x10566bb50>, ast_node.body:<cAST.Blocks object at 0x10566bdd0>, param_decls:None
         # func_ = self.visit(ast_node.decl, flag=2)
         f_ = self.visit_Decl(ast_node.decl, flag=2)
         self.tool_current_function = f_
 
         if ast_node.body:
-            print(f'func_的类型是{type(f_)}')
+            # print(f'func_的类型是{type(f_)}')
             # func_的类型是<class 'llvmlite.ir.values.Function'>
             entry_block = f_.append_basic_block(name="entry")
             self.tool_builders = ir.IRBuilder(entry_block)
             # 通过self.tool_builders对象，可以使用IRBuilder类的方法来生成LLVM IR代码，例如创建指令、基本块、函数等，并将其添加到相应的函数中。
             # 通过append_basic_block方法，可以在函数中添加一个基本块，该方法的参数name是可选的，用于指定基本块的名称。
-            print(f'func_args:{f_.args}')
+            # print(f'func_args:{f_.args}')
             for a in f_.args:
                 self.tool_used_memory[a.name] = self.tool_builders.alloca(a.type, name=a.name)
                 self.tool_builders.store(a, self.tool_used_memory[a.name])
@@ -143,7 +143,7 @@ class Tool(object):
             # self.visit_Blocks(ast_node.body)
             if ast_node.body.blocks:
                 for item in ast_node.body.blocks:
-                    print(f'item:{item}')
+                    # print(f'item:{item}')
                     self.visit(item, flag=0)
 
         # else:
@@ -158,15 +158,15 @@ class Tool(object):
         self.tool_current_function = None
 
     def visit_Blocks(self, ast_node, flag=0):
-        print(f'visit_Blocks ast_node:{ast_node}, ast_node.blocks:{ast_node.blocks}')
+        # print(f'visit_Blocks ast_node:{ast_node}, ast_node.blocks:{ast_node.blocks}')
         if ast_node.blocks:
             for block in ast_node.blocks:
-                print(f'item:{block}')
+                # print(f'item:{block}')
                 self.visit(block, flag=0)
             
 
     def visit_Constant(self, ast_node, flag=0):
-        print(f'visit_Constant ast_node.kind:{ast_node.kind}, ast_node.content:{ast_node.content}')
+        # print(f'visit_Constant ast_node.kind:{ast_node.kind}, ast_node.content:{ast_node.content}')
         if ast_node.kind == 'int':
             return ir.Constant(int32, ast_node.content)
         elif ast_node.kind == 'float':
@@ -197,7 +197,7 @@ class Tool(object):
         return res
     
     def visit_Constant_String(self, ast_node, flag=0):
-        print(f'visit_Constant_String ast_node:{ast_node}, ast_node.content:{ast_node.content}')
+        # print(f'visit_Constant_String ast_node:{ast_node}, ast_node.content:{ast_node.content}')
         mid_str = ast_node.content[1:-1] + '\0'
         if '\\n' in ast_node.content:
             mid_str = ast_node.content[1:-1].replace('\\n', '\n') + '\0'
@@ -216,7 +216,7 @@ class Tool(object):
 
 
     def visit_Identifier(self, ast_node, flag=0):
-        print(f'visit_Identifier ast_node:{ast_node}, ast_node.name:{ast_node.name}, ast_node.spec:{ast_node.spec}')
+        # print(f'visit_Identifier ast_node:{ast_node}, ast_node.name:{ast_node.name}, ast_node.spec:{ast_node.spec}')
         if ast_node.spec:
             kind = ast_node.spec
             if kind == 'int':
@@ -230,7 +230,7 @@ class Tool(object):
             elif ast_node == 'double':
                 return ir_double
             elif ast_node == 'unsignedint':
-                print(f'unsigned_int32:{unsigned_int32}')
+                # print(f'unsigned_int32:{unsigned_int32}')
                 return unsigned_int32
             if kind in self.tool_type_defined:
                 return self.tool_module.context.get_identified_type(ast_node.name)
@@ -319,7 +319,7 @@ class Tool(object):
         return result
         
     def visit_Assignment(self, ast_node, flag=0):
-        print(f'visit_Assignment ast_node:{ast_node}, ast_node.left:{ast_node.left}, ast_node.right:{ast_node.right}')
+        # print(f'visit_Assignment ast_node:{ast_node}, ast_node.left:{ast_node.left}, ast_node.right:{ast_node.right}')
         if ast_node.OpName == '=':
             res = self.visit(ast_node.left, 0)
             assigner = self.visit(ast_node.right, 1)
@@ -329,7 +329,7 @@ class Tool(object):
 
     def visit_Operation(self, ast_node: SynTree.Operation, flag=0):
         if ast_node.OpType == 'BinaryOp':
-            print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, ast_node.left:{ast_node.left}, ast_node.right:{ast_node.right}')
+            # print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, ast_node.left:{ast_node.left}, ast_node.right:{ast_node.right}')
             return self.visit_BinaryOp(ast_node, flag)
             # left = self.visit(ast_node.left, flag)
             # right = self.visit(ast_node.right, 1)
@@ -368,7 +368,7 @@ class Tool(object):
             # else:
             #     raise RuntimeError("not implement binary operator!")
         elif ast_node.OpType == 'UnaryOp':
-            print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, ast_node.expression:{ast_node.expression}')
+            # print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, ast_node.expression:{ast_node.expression}')
             return self.visit_UnaryOp(ast_node, flag)
             # if (ast_node.OpName == '&'):
             #     return self.visit(ast_node.expression, 0)
@@ -380,14 +380,14 @@ class Tool(object):
             # elif (ast_node.OpName == '-'):
             #     return self.tool_builders.neg(self.visit(ast_node.expression, 1))
         elif ast_node.OpType == 'Assignment':
-            print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, ast_node.left:{ast_node.left}, ast_node.right:{ast_node.right}')
+            # print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, ast_node.left:{ast_node.left}, ast_node.right:{ast_node.right}')
             return self.visit_Assignment(ast_node, flag)
         
             # if ast_node.OpName == '=':
-            #     print(f'left:{ast_node.left}, right:{ast_node.right}')
+            #     # print(f'left:{ast_node.left}, right:{ast_node.right}')
             #     res = self.visit(ast_node.left, 0)
             #     assigner = self.visit(ast_node.right, 1)
-            #     print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, res:{res}, assigner:{assigner}')
+            #     # print(f'visit_Operation ast_node.OpType:{ast_node.OpType}, ast_node.OpName:{ast_node.OpName}, res:{res}, assigner:{assigner}')
             #     if assigner == 'NULL':
             #         assigner = ir.Constant(int32, 0).bitcast(res.type)
             #     self.tool_builders.store(assigner, res)
@@ -415,8 +415,20 @@ class Tool(object):
         return self.tool_builders.call(fun_, arglist)
 
     def visit_ControlLogic(self, ast_node, flag=0):
-        print(f'visit_ControlLogic ast_node:{ast_node}, ast_node.logicType:{ast_node.logicType}')
+        # print(f'visit_ControlLogic ast_node:{ast_node}, ast_node.logicType:{ast_node.logicType}')
         if ast_node.logicType == 'If':
+            judge = self.visit(ast_node.judge, 1)
+            if type(judge) is not ir.IntType(1):
+                judge = self.tool_builders.icmp_signed('!=', judge, ir.Constant(judge.type, 0))
+            if ast_node.action2:  # false
+                with self.tool_builders.if_else(judge) as (then, otherwise):
+                    with then:
+                        self.visit(ast_node.action1)
+                    with otherwise:
+                        self.visit(ast_node.action2)
+            else:
+                with self.tool_builders.if_then(judge):
+                    self.visit(ast_node.action1)
             # judge = self.visit(ast_node.judge, 1)
             # if type(judge) is not ir.IntType(1):
             #     judge = self.tool_builders.icmp_signed('!=', judge, ir.Constant(judge.type, 0))
@@ -446,68 +458,21 @@ class Tool(object):
             # else:
             #     with self.tool_builders.if_then(judge):
             #         self.visit(ast_node.action1)
-            self.visit_ControlLogic_If(ast_node, flag=0)
+            # self.visit_ControlLogic_If(ast_node, flag=0)
         elif ast_node.logicType == 'For':
-            # print(f'ast_node.first:{ast_node.first}, ast_node.judge:{ast_node.judge}, ast_node.action:{ast_node.action}, ast_node.statement:{ast_node.statement}')
-            # self.visit(ast_node.first)
-            # loop_s = self.tool_current_function.append_basic_block()
-            # loop_body = self.tool_current_function.append_basic_block()
-            # loop_e = self.tool_current_function.append_basic_block()
-            # self.tool_start_stack.append(loop_s)
-            # self.tool_end_stack.append(loop_e)
-            # self.tool_builders.branch(loop_s)
-            # self.tool_builders.position_at_end(loop_s)
-            # condition = self.visit(ast_node.judge, 1)
-            # if type(condition) is not ir.IntType(1):
-            #     condition = self.tool_builders.icmp_signed('!=', condition, ir.Constant(condition.type, 0))
-            # self.tool_builders.cbranch(condition, loop_body, loop_e)
-            # self.tool_builders.position_at_end(loop_body)
-            # self.visit(ast_node.statement)
-            # self.visit(ast_node.action)
-            # self.tool_builders.branch(loop_s)
-            # self.tool_start_stack.pop()
-            # self.tool_end_stack.pop()
-            # self.tool_builders.position_at_end(loop_e)
             self.visit_ControlLogic_For(ast_node, flag=0)
 
         elif ast_node.logicType == 'While':
-            # loop_s = self.tool_current_function.append_basic_block()
-            # loop_body = self.tool_current_function.append_basic_block()
-            # loop_e = self.tool_current_function.append_basic_block()
-            # self.tool_start_stack.append(loop_s)
-            # self.tool_end_stack.append(loop_e)
-
-            # self.tool_builders.branch(loop_s)
-            # self.tool_builders.position_at_end(loop_s)
-            # condition = self.visit(ast_node.judge, 1)
-            # if type(condition) is not ir.IntType(1):
-            #     condition = self.tool_builders.icmp_signed('!=', condition, ir.Constant(condition.type, 0))
-            # self.tool_builders.cbranch(condition, loop_body, loop_e)
-
-            # self.tool_builders.position_at_end(loop_body)
-            # self.visit(ast_node.action)
-            # self.tool_builders.branch(loop_s)
-
-            # self.tool_start_stack.pop()
-            # self.tool_end_stack.pop()
-            # self.tool_builders.position_at_end(loop_e)
+            
             self.visit_ControlLogic_While(ast_node, flag=0)
 
         elif ast_node.logicType == 'Continue':
-            # self.tool_builders.branch(self.tool_start_stack[-1])
             self.visit_ControlLogic_Continue(ast_node, flag=0)
 
         elif ast_node.logicType == 'Break':
-            # self.tool_builders.branch(self.tool_end_stack[-1])
             self.visit_ControlLogic_Break(ast_node, flag=0)
 
         elif ast_node.logicType == 'Return':
-            # if ast_node.return_result:
-            #     print(f'ast_node.return_result:{ast_node.return_result}')
-            #     return_value = self.visit(ast_node.return_result, 1)
-            #     self.tool_builders.ret(return_value)
-            # else:
-            #     self.tool_builders.ret_void()
             self.visit_ControlLogic_Return(ast_node, flag=0)
 
 
@@ -560,7 +525,7 @@ class Tool(object):
         self.tool_builders.position_at_end(loop_e)
 
     def visit_ControlLogic_For(self, ast_node, flag=0):
-        print(f'ast_node.first:{ast_node.first}, ast_node.judge:{ast_node.judge}, ast_node.action:{ast_node.action}, ast_node.statement:{ast_node.statement}')
+        # print(f'ast_node.first:{ast_node.first}, ast_node.judge:{ast_node.judge}, ast_node.action:{ast_node.action}, ast_node.statement:{ast_node.statement}')
         self.visit(ast_node.first)
         loop_e = self.tool_current_function.append_basic_block()
         loop_s = self.tool_current_function.append_basic_block()
@@ -575,7 +540,7 @@ class Tool(object):
         self.tool_builders.cbranch(condition, loop_body, loop_e)
         self.tool_builders.position_at_end(loop_body)
         self.visit(ast_node.statement)
-        print(f'ast_node.action:{ast_node.action}')
+        # print(f'ast_node.action:{ast_node.action}')
         self.visit(ast_node.action)
         self.tool_builders.branch(loop_s)
         self.tool_start_stack.pop()
@@ -584,7 +549,7 @@ class Tool(object):
 
 
     def visit_ControlLogic_While(self, ast_node, flag=0):
-        print(f'visit_ControlLogic_While ast_node:{ast_node}, ast_node.judge:{ast_node.judge}, ast_node.action:{ast_node.action}')
+        # print(f'visit_ControlLogic_While ast_node:{ast_node}, ast_node.judge:{ast_node.judge}, ast_node.action:{ast_node.action}')
         loop_s = self.tool_current_function.append_basic_block()
         loop_body = self.tool_current_function.append_basic_block()
         loop_e = self.tool_current_function.append_basic_block()
@@ -594,7 +559,7 @@ class Tool(object):
         self.tool_builders.branch(loop_s)
         self.tool_builders.position_at_end(loop_s)
         condition = self.visit(ast_node.judge, 1)
-        print(f'condition:{condition}')
+        # print(f'condition:{condition}')
         if type(condition) is not ir.IntType(1):
             condition = self.tool_builders.icmp_signed('!=', condition, ir.Constant(condition.type, 0))
         self.tool_builders.cbranch(condition, loop_body, loop_e)
@@ -615,14 +580,14 @@ class Tool(object):
 
     def visit_ControlLogic_Return(self, ast_node, flag=0):
         if ast_node.return_result:
-                print(f'ast_node.return_result:{ast_node.return_result}')
+                # print(f'ast_node.return_result:{ast_node.return_result}')
                 return_value = self.visit(ast_node.return_result, 1)
                 self.tool_builders.ret(return_value)
         else:
             self.tool_builders.ret_void()
 
     def visit_Ref(self, ast_node: SynTree.Ref, flag=0):
-        # print(f'visit_Ref ast_node:{ast_node}, ast_node.refType:{ast_node.refType}, ast_node.name:{ast_node.name}, ast_node.sub:{ast_node.sub}')
+        # # print(f'visit_Ref ast_node:{ast_node}, ast_node.refType:{ast_node.refType}, ast_node.name:{ast_node.name}, ast_node.sub:{ast_node.sub}')
         """
         ArrayRef,按照下标获取数组某个元素
         StructRef，按照域名获取结构体成员变量
@@ -681,7 +646,7 @@ class Tool(object):
 
 
     def visit_CommentNode(self, ast_node, flag=0):
-        print(f'visit_CommentNode ast_node:{ast_node}, ast_node.content:{ast_node.content}')
+        # print(f'visit_CommentNode ast_node:{ast_node}, ast_node.content:{ast_node.content}')
         content = ast_node.content
         if '\n' in ast_node.content:
             content = content[0:-1]
@@ -754,7 +719,7 @@ class Tool(object):
             raise RuntimeError('Undefined function: ' + ast_node.name.name)
 
     def return_content(self, ast_node, arg=None):
-        print(f'return_content, ast_node:{ast_node}, arg:{arg}')
+        # print(f'return_content, ast_node:{ast_node}, arg:{arg}')
         if arg is None:
             return self.get_element_type(ast_node)
         
@@ -765,7 +730,7 @@ class Tool(object):
         elif type(ast_node) == SynTree.DeclFunction and arg is not None:
             param_list = []
             if ast_node.args:
-                print(f'ast_node.args:{ast_node.args}')
+                # print(f'ast_node.args:{ast_node.args}')
                 for p in ast_node.args.elements:
                     # param_list.append(self.allocate_variable(p, flag=2))
                     tmp_node = p
@@ -778,7 +743,7 @@ class Tool(object):
                         param_list.append(self.allocate_indenti(tmp_node, flag=2, modifier_list=modi_list))
                     elif type(tmp_node) == SynTree.Struct:
                         param_list.append(self.allocate_struct(tmp_node, flag=2, modifier_list=modi_list))
-                    print(f'param_list:{param_list}')
+                    # print(f'param_list:{param_list}')
             return ir_func(arg, param_list)
         elif arg is not None:
             return None
@@ -796,7 +761,7 @@ class Tool(object):
         elif ast_node == 'double':
             return ir_double
         elif ast_node == 'unsignedint':
-            print(f'unsigned_int32:{unsigned_int32}')
+            # print(f'unsigned_int32:{unsigned_int32}')
             return unsigned_int32
     
     # def get_defined_type(self, ast_node):
@@ -815,7 +780,7 @@ class Tool(object):
             # elif ast_node == 'double':
             #     return ir_double
             # elif ast_node == 'unsignedint':
-            #     print(f'unsigned_int32:{unsigned_int32}')
+            #     # print(f'unsigned_int32:{unsigned_int32}')
             #     return unsigned_int32
             return self.get_regular_type(ast_node)
         elif ast_node in self.tool_type_defined:
@@ -823,9 +788,9 @@ class Tool(object):
         return None
 
     def allocate_variable(self, ast_node, flag=0, modifier_list=[]):
-        print(f'allocate_variable, ast_node:{ast_node}, flag:{flag}, modifier_list:{modifier_list}')
+        # print(f'allocate_variable, ast_node:{ast_node}, flag:{flag}, modifier_list:{modifier_list}')
         if type(ast_node) == SynTree.Identifier:
-            print(f'ast_node.name:{ast_node.name}')
+            # print(f'ast_node.name:{ast_node.name}')
             return self.allocate_indenti(ast_node, flag, modifier_list)
         elif type(ast_node) == SynTree.Struct:
             return self.allocate_struct(ast_node, flag, modifier_list)
@@ -839,17 +804,17 @@ class Tool(object):
         elif ast_node.spec[0] in self.tool_type_defined:
             iden_type = self.tool_module.context.get_identified_type(ast_node.spec[0].name)
         iden_name = modifier_list.pop(0).name
-        print(f'allocate_indenti, iden_type:{iden_type}, iden_name:{iden_name}, flag:{flag}, modifier_list:{modifier_list}')
+        # print(f'allocate_indenti, iden_type:{iden_type}, iden_name:{iden_name}, flag:{flag}, modifier_list:{modifier_list}')
         # allocate_indenti, iden_type:i32, iden_name:main, flag:2, modifier_list:[<SynTree.DeclFunction object at 0x100af2150>]
         for modifier in modifier_list:
             iden_type = self.return_content(modifier, iden_type)
-            print(f'iden_type:{iden_type}, modifier:{modifier}')
+            # print(f'iden_type:{iden_type}, modifier:{modifier}')
 
         return self.handle_allocate_indenti_by_flag(ast_node, iden_type, iden_name, flag, modifier_list)
 
     def handle_allocate_indenti_by_flag(self, ast_node, iden_type, iden_name, flag=0, modifier_list=[]):
-        print(f'handle_allocate_indenti_by_flag, ast_node:{ast_node}, iden_type:{iden_type}, iden_name:{iden_name}, flag:{flag}, modifier_list:{modifier_list}')
-        print(f'self.tool_used_memory:{self.tool_used_memory}')
+        # print(f'handle_allocate_indenti_by_flag, ast_node:{ast_node}, iden_type:{iden_type}, iden_name:{iden_name}, flag:{flag}, modifier_list:{modifier_list}')
+        # print(f'self.tool_used_memory:{self.tool_used_memory}')
         if flag == 0:  # local
             self.tool_used_memory[ast_node.name] = self.tool_builders.alloca(iden_type, name=iden_name)
             return iden_type
@@ -862,9 +827,9 @@ class Tool(object):
                 if type(modifier_list[0]) == SynTree.DeclFunction:
                     new_func = ir.Function(self.tool_module, iden_type, name=iden_name)
                     # new_func:declare i32 @"main"()
-                    print(f'new_func:{new_func}')
+                    # print(f'new_func:{new_func}')
                     if modifier_list[0].args:
-                        print(f'modifier_list[0].args:{modifier_list[0].args}')
+                        # print(f'modifier_list[0].args:{modifier_list[0].args}')
                         params = []
                         for p in modifier_list[0].args.elements:
                             params.append(p.name)
@@ -883,10 +848,10 @@ class Tool(object):
                 return iden_type
 
     def handle_decl_args(self, ast_node, flag):
-        print(f'handle_decl_args, ast_node:{ast_node}, flag:{flag}, init:{ast_node.init}')
+        # print(f'handle_decl_args, ast_node:{ast_node}, flag:{flag}, init:{ast_node.init}')
         # if ast_node.init:
         if flag == 0 and ast_node.init:
-            print(f'flag=0 ast_node.name:{ast_node.name}, self.tool_used_memory:{self.tool_used_memory}, self.tool_used_memory[ast_node.name]:{self.tool_used_memory[ast_node.name]}')
+            # print(f'flag=0 ast_node.name:{ast_node.name}, self.tool_used_memory:{self.tool_used_memory}, self.tool_used_memory[ast_node.name]:{self.tool_used_memory[ast_node.name]}')
             self.tool_builders.store(self.visit(ast_node.init, 1), self.tool_used_memory[ast_node.name])
             # 
             # ast_node.name:a, self.tool_used_memory:{'a': <ir.AllocaInstr 'a' of type 'i32*', opname 'alloca', operands ()>}, self.tool_used_memory[ast_node.name]:%"a" = alloca i32
@@ -900,10 +865,10 @@ class Tool(object):
             # 
             # 
         elif flag == 1 and ast_node.init and not self.tool_global_variables[ast_node.name].initializer:
-            print(f'flag=1 ast_node.name:{ast_node.name}, self.tool_global_variables:{self.tool_global_variables}, self.tool_global_variables[ast_node.name]:{self.tool_global_variables[ast_node.name]}')
+            # print(f'flag=1 ast_node.name:{ast_node.name}, self.tool_global_variables:{self.tool_global_variables}, self.tool_global_variables[ast_node.name]:{self.tool_global_variables[ast_node.name]}')
             # if not self.tool_global_variables[ast_node.name].initializer:
             self.tool_global_variables[ast_node.name].initializer = self.visit(ast_node.init, ast_node.name)
-            print(f'flag=1 ast_node.name:{ast_node.name}, self.tool_global_variables:{self.tool_global_variables}, self.tool_global_variables[ast_node.name]:{self.tool_global_variables[ast_node.name]}')
+            # print(f'flag=1 ast_node.name:{ast_node.name}, self.tool_global_variables:{self.tool_global_variables}, self.tool_global_variables[ast_node.name]:{self.tool_global_variables[ast_node.name]}')
         elif flag == 1:
             self.tool_global_variables[ast_node.name].align = 4
             self.tool_global_variables[ast_node.name].linkage = "common"
@@ -967,5 +932,5 @@ class Tool(object):
     
     def visit(self, node, flag=0):
         fun_name = 'visit_' + node.__class__.__name__
-        print(f'fun_name:{fun_name}, node:{node}, flag:{flag}')
+        # print(f'fun_name:{fun_name}, node:{node}, flag:{flag}')
         return getattr(self, fun_name)(node, flag)

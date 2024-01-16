@@ -1,43 +1,37 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
 
-void sort(int* arr, int n) {
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
-                int temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
-            }
-        }
-    }
-}
+int main(){
+	printf("Please enter a line of integers separated by spaces\n");
+	char ch;
+	int list[100], count = 0;
 
-int main() {
-    char input[100];
-    printf("请输入若干个整数，用逗号分隔: ");
-    fgets(input, sizeof(input), stdin);
-    input[strcspn(input, "\n")] = '\0';
+	scanf("%d", &list[count]);
+	count = count + 1;
+	scanf("%c",&ch);
+	while (ch != '\n'){
+		scanf("%d", &list[count]);
+		count=count+1;
+		scanf("%c",&ch);
+	}
 
-    int arr[100];
-    int n = 0;
-    char* token = strtok(input, ",");
-    while (token != NULL) {
-        arr[n++] = atoi(token);
-        token = strtok(NULL, ",");
-    }
+	int i = 1, j, temp;
+	while(i < count){
+	    	j = 0;
+	    	while(j < count - i){
+	    		if (list[j] > list[j + 1]){
+				temp = list[j];
+				list[j] = list[j + 1];
+				list[j + 1] = temp;
+			}
+		        j = j + 1;
+		}
+		i = i + 1;
+	}
 
-    sort(arr, n);
-
-    printf("排序后的结果为: ");
-    for (int i = 0; i < n; i++) {
-        printf("%d", arr[i]);
-        if (i != n - 1) {
-            printf(", ");
-        }
-    }
-    printf("\n");
-
-    return 0;
+	i = 0;
+	while(i < count){
+        	printf("%d ", list[i]);
+        	i = i + 1;
+    	}
+	return 0;
 }
