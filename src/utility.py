@@ -2,10 +2,11 @@ from llvmlite import ir
 import SynTree as SynTree
 
 # LLVM tool_type_defined
+
+int1 = ir.IntType(1)
+int8 = ir.IntType(8)
 int64 = ir.IntType(64)
 int32 = ir.IntType(32)
-int8 = ir.IntType(8)
-int1 = ir.IntType(1)
 unsigned_int32 = ir.IntType(32)
 ir_void = ir.VoidType()
 ir_float = ir.FloatType()
@@ -25,13 +26,13 @@ def handle_decl_change(to_be_changed, changer):
     while changer_tail.type:
         changer_tail = changer_tail.type
 
-    if isinstance(to_be_changed, SynTree.Identifier):
+    if isinstance(to_be_changed, SynTree.Id):
         changer_tail.type = to_be_changed
         return changer
     else:
         res = to_be_changed
 
-        while not isinstance(res.type, SynTree.Identifier):
+        while not isinstance(res.type, SynTree.Id):
             res = res.type
 
         changer_tail.type = res.type

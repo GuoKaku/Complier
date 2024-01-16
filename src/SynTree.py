@@ -35,7 +35,7 @@ class Constant(Node):
         return tuple([])
 
 
-class Identifier(Node):
+class Id(Node):
     def __init__(self, **kwargs):
         self.name = kwargs['name']
         self.spec = kwargs['spec']

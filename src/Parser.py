@@ -7,158 +7,158 @@ from utility import handle_decl_change
 # 开始
 
 
-def p_starter(p):
+def p_starter(item):
     """ start   : part
                 | empty
     """
-    p[0] = SynTree.FirstNode(p[1]) if p[1] is not None else SynTree.FirstNode([])
+    item[0] = SynTree.FirstNode(item[1]) if item[1] is not None else SynTree.FirstNode([])
 
 
-def p_part(p):
+def p_part(item):
     """ part    : part declorcom
                 | declorcom
     """
-    if len(p) > 2:
-        if p[2] is not None:
-            p[1].extend(p[2])
-    p[0] = p[1]
+    if len(item) > 2:
+        if item[2] is not None:
+            item[1].extend(item[2])
+    item[0] = item[1]
     
     
-def p_decl_or_comment_1(p):
+def p_decl_or_comment_1(item):
     """ declorcom   : comment
     """
-    p[0] = [p[1]]
+    item[0] = [item[1]]
     
-def p_decl_or_comment_2(p):
+def p_decl_or_comment_2(item):
     """ declorcom   : external_declaration
     """
-    p[0] = p[1]
+    item[0] = item[1]
     
 
-def p_initializer_ass(p):
+def p_initializer_ass(item):
     """ initializer : assignable_expression
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_initializer_in(p):
+def p_initializer_in(item):
     """ initializer : '{' initializer_list_orempty '}'
                     | '{' initializer_list ',' '}'
     """
-    if p[2] is None:
-        p[0] = SynTree.ContentList(listType='InitList',elements=[])
+    if item[2] is None:
+        item[0] = SynTree.ContentList(listType='InitList',elements=[])
     else:
-        p[0] = p[2]
+        item[0] = item[2]
 
-def p_initializer_list(p):
+def p_initializer_list(item):
     """ initializer_list    : initializer
                             | initializer_list ',' initializer
     """
-    if len(p) == 2:
-        init = p[1]
-        p[0] = SynTree.ContentList(listType='InitList', elements=[init])
+    if len(item) == 2:
+        init = item[1]
+        item[0] = SynTree.ContentList(listType='InitList', elements=[init])
     else:
-        init = p[3]
-        p[1].elements.append(init)
-        p[0] = p[1]
+        init = item[3]
+        item[1].elements.append(init)
+        item[0] = item[1]
 
-def p_variable_initable(p):
+def p_variable_initable(item):
     """ variable_initable : variable
                         | variable '=' initializer
     """
     init_ = None
-    if len(p) > 2:
-        init_ = p[3]
-    p[0] = dict(type=p[1], init=init_)
+    if len(item) > 2:
+        init_ = item[3]
+    item[0] = dict(type=item[1], init=init_)
 
-def p_variable_initable_list_idec(p):
+def p_variable_initable_list_idec(item):
     """ variable_initable_list    : variable_initable
                                 | variable_initable_list ',' variable_initable
     """
-    if len(p) == 4:
-        p[0] = p[1] + [p[3]]
+    if len(item) == 4:
+        item[0] = item[1] + [item[3]]
     else:
-        p[0] = [p[1]]
+        item[0] = [item[1]]
 
     
 
 
 
-def p_empty(p):
+def p_empty(item):
     """ empty :
     """
-    p[0] = None
+    item[0] = None
 
 
-def p_type(p):
+def p_type(item):
     """ type  : type_specifier_can_unsigned
                                 | type_specifier_cannot_unsigned 
                                 | uorus
                                 | uorus type_specifier_can_unsigned
     """
-    if len(p)>2:
-        # print(type(p[1]))
-        tmp = p[1] + p[2]
+    if len(item)>2:
+        # print(type(item[1]))
+        tmp = item[1] + item[2]
         # print(type(tmp))
-        p[0] = dict(qual=[], spec=[tmp])
+        item[0] = dict(qual=[], spec=[tmp])
     else:
-        p[0] = dict(qual=[], spec=[p[1]])
+        item[0] = dict(qual=[], spec=[item[1]])
         
 
 
-def p_type_specifier(p):
+def p_type_specifier(item):
     '''type_specifier : type_specifier_cannot_unsigned
                         | type_specifier_can_unsigned
                         | uorus '''
 
-def p_type_specifier_cannot_unsigned(p):
+def p_type_specifier_cannot_unsigned(item):
     ''' type_specifier_cannot_unsigned : VOID
                        | FLOAT
                        | DOUBLE
                        | BOOL
                        | struct_specifier
     '''
-    p[0] = p[1]
+    item[0] = item[1]
     
-def p_type_specifier_can_unsigned(p):
+def p_type_specifier_can_unsigned(item):
     ''' type_specifier_can_unsigned : INT
                        | SHORT
                        | LONG
                        | CHAR
     '''
-    p[0] = p[1]
+    item[0] = item[1]
     
-def p_uorus(p):
+def p_uorus(item):
     '''uorus   :          SIGNED
                        | UNSIGNED'''
-    p[0]=p[1]
+    item[0]=item[1]
 
-def p_declaration_list_orempty(p):
+def p_declaration_list_orempty(item):
     """declaration_list_orempty : empty
                             | declaration_list
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_declaration(p):
+def p_declaration(item):
     """ declaration : type variable_initable_list_orempty ';'
     """
-    decl_spec = p[1]
+    decl_spec = item[1]
     struct = None
     if isinstance(decl_spec['spec'][0], SynTree.Struct):
         struct = decl_spec['spec'][0]
-    init_decl_list = p[2]
+    init_decl_list = item[2]
 
-    p[0] = []
+    item[0] = []
 
     for init_decl in init_decl_list:
         type = init_decl['type']
         if struct is not None:
-            if isinstance(type, SynTree.Identifier):
+            if isinstance(type, SynTree.Id):
                 args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': struct,
                        'init': init_decl['init']}
                 declaration = SynTree.Decl(**args)
 
             else:
-                while not isinstance(type.type, SynTree.Identifier):
+                while not isinstance(type.type, SynTree.Id):
                     type = type.type
                 declname = type.type.name
                 type.type = struct
@@ -166,85 +166,85 @@ def p_declaration(p):
                        'init': None}
                 declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type, SynTree.Identifier):
+            while not isinstance(type, SynTree.Id):
                 type = type.type
             type.spec = decl_spec['spec']
             args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': init_decl['type'],
                    'init': init_decl['init']}
             declaration = SynTree.Decl(**args)
-        p[0].insert(0, declaration)
+        item[0].insert(0, declaration)
 
-def p_declaration_list(p):
+def p_declaration_list(item):
     """ declaration_list    : declaration
                             | declaration_list declaration
     """
-    if len(p) == 3:
-        p[0] = p[1] + p[2]
+    if len(item) == 3:
+        item[0] = item[1] + item[2]
     else:
-        p[0] = p[1]
+        item[0] = item[1]
 
 
-def p_identifier_list_orempty(p):
+def p_identifier_list_orempty(item):
     """identifier_list_orempty  : empty
                             | identifier_list
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_identifier_list(p):
+def p_identifier_list(item):
     """ identifier_list : identifier
                         | identifier_list ',' identifier
     """
-    if len(p) == 2:
-        p[0] = SynTree.ContentList(listType='ParamList', elements=[p[1]])
+    if len(item) == 2:
+        item[0] = SynTree.ContentList(listType='ParamList', elements=[item[1]])
     else:
-        p[1].elements.append(p[3])
-        p[0] = p[1]
+        item[1].elements.append(item[3])
+        item[0] = item[1]
 
-def p_identifier(p):
+def p_identifier(item):
     """ identifier  : IDENTIFIER 
                     | inlinefunc """
-    args = {'name': p[1], 'spec': None}
-    p[0] = SynTree.Identifier(**args)
+    args = {'name': item[1], 'spec': None}
+    item[0] = SynTree.Id(**args)
     
-def p_inclinefunc(p):
+def p_inclinefunc(item):
     """ inlinefunc  : SIZEOF"""
-    p[0] =p[1]
+    item[0] =item[1]
 
 # 跳转
-def p_back_statement_break(p):
+def p_back_statement_break(item):
     """ back_statement  : BREAK ';' """
-    p[0] = SynTree.ControlLogic(logicType='Break')
+    item[0] = SynTree.ControlLogic(logicType='Break')
 
-def p_back_statement_continue(p):
+def p_back_statement_continue(item):
     """ back_statement  : CONTINUE ';' """
-    p[0] = SynTree.ControlLogic(logicType='Continue')
+    item[0] = SynTree.ControlLogic(logicType='Continue')
 
-def p_back_statement_return(p):
+def p_back_statement_return(item):
     """ back_statement  : RETURN ';'
                         | RETURN expression ';'
     """
-    if len(p)==3:
+    if len(item)==3:
         args = {"return_result": None}
-        p[0] = SynTree.ControlLogic(logicType='Return',**args)
+        item[0] = SynTree.ControlLogic(logicType='Return',**args)
     else:
-        args={"return_result":p[2]}
-        p[0] = SynTree.ControlLogic(logicType='Return',**args)
+        args={"return_result":item[2]}
+        item[0] = SynTree.ControlLogic(logicType='Return',**args)
 
 
-def p_variable_initable_list_orempty(p):
+def p_variable_initable_list_orempty(item):
     """variable_initable_list_orempty  : empty
                             | variable_initable_list
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_assignable_expression_orempty(p):
+def p_assignable_expression_orempty(item):
     """assignable_expression_orempty    : empty
                                     | assignable_expression
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
 
-def p_assign_operator(p):
+def p_assign_operator(item):
     ''' assign_operator : '='
                             | MUL_ASSIGN
                             | DIV_ASSIGN
@@ -256,328 +256,329 @@ def p_assign_operator(p):
                             | AND_ASSIGN
                             | XOR_ASSIGN
                             | OR_ASSIGN '''
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_arg_value_exp_list(p):
+def p_arg_value_exp_list(item):
     """ arg_value_exp_list    : assignable_expression
                                     | arg_value_exp_list ',' assignable_expression
     """
-    if len(p) == 2:
-        p[0] = SynTree.ContentList(listType='ExprList', elements=[p[1]])
+    if len(item) == 2:
+        item[0] = SynTree.ContentList(listType='ExprList', elements=[item[1]])
     else:
-        p[1].elements.append(p[3])
-        p[0] = p[1]
+        item[1].elements.append(item[3])
+        item[0] = item[1]
 
-def p_assignable_expression(p):
+def p_assignable_expression(item):
     """ assignable_expression   : conditional_expression
                                 | unary_expression assign_operator assignable_expression
     """
-    if len(p) == 2:
-        p[0] = p[1]
+    if len(item) == 2:
+        item[0] = item[1]
     else:
-        args={'left':p[1],'right':p[3]}
-        p[0] = SynTree.Operation(OpType='Assignment',OpName=p[2],**args)
+        args={'left':item[1],'right':item[3]}
+        item[0] = SynTree.Operation(OpType='Assignment',OpName=item[2],**args)
 
-def p_block_item_list_orempty(p):
+def p_block_item_list_orempty(item):
     """block_item_list_orempty  : empty
                             | block_item_list
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_constant_expression_orempty(p):
+def p_constant_expression_orempty(item):
     """constant_expression_orempty  : empty
                             | constant_expression
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_specifier_qualifier_list_orempty(p):
+def p_specifier_qualifier_list_orempty(item):
     """specifier_qualifier_list_orempty  : empty
                             | specifier_qualifier_list
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
 # block
-def p_block_item(p):
+def p_block_item(item):
     """ block_item  : declaration
                     | statement
                     | comment
     """
-    p[0] = p[1] if isinstance(p[1], list) else [p[1]]
+    item[0] = item[1] if isinstance(item[1], list) else [item[1]]
 
 
-def p_block_item_list(p):
+def p_block_item_list(item):
     """ block_item_list : block_item
                         | block_item_list block_item
     """
-    if len(p) == 2:
-        p[0] = p[1]
-    elif len(p) == 3:
-        if p[2] == [None]:
-            p[0] = p[1]
+    if len(item) == 2:
+        item[0] = item[1]
+    elif len(item) == 3:
+        if item[2] == [None]:
+            item[0] = item[1]
         else:
-            p[0] = p[1] + p[2]
+            item[0] = item[1] + item[2]
 
 
-def p_expression_orempty(p):
+def p_expression_orempty(item):
     """expression_orempty    : empty
                         | expression
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_funcbody_statement(p):
+def p_funcbody_statement(item):
     """ funcbody_statement : '{' block_item_list_orempty '}' """
-    p[0] = SynTree.Blocks(
-        blocks=p[2])
+    item[0] = SynTree.Blocks(
+        blocks=item[2])
 
-def p_conditional_expression(p):
+def p_conditional_expression(item):
     """ conditional_expression  : binary_expression 
                 | ternary_expression
     """
-    if len(p) == 2:
-        p[0] = p[1]
+    if len(item) == 2:
+        item[0] = item[1]
         
-def p_ternary_expression(p):
+def p_ternary_expression(item):
     """ternary_expression : expression '?' expression ':' expression
     """
-    if len(p) == 6:
-        args={'condition':p[1],'true':p[3],'false':p[5]}
-        p[0] = SynTree.Operation(OpType='TernaryOp',OpName=p[2],**args)
+    if len(item) == 6:
+        args={'condition':item[1],'true':item[3],'false':item[5]}
+        item[0] = SynTree.Operation(OpType='TernaryOp',OpName=item[2],**args)
     
         
 
 
-def p_constant_int(p):
+def p_constant_int(item):
     """ constant    : INTEGER_CONSTANT
     """
-    p[0] = SynTree.Constant(
-        'int', p[1], )
+    item[0] = SynTree.Constant(
+        'int', item[1], )
 
-def p_constant_char(p):
+def p_constant_char(item):
     """ constant    : CHAR_CONSTANT
     """
-    p[0] = SynTree.Constant(
-        'char', p[1], )
+    item[0] = SynTree.Constant(
+        'char', item[1], )
 
-def p_constant_float(p):
+def p_constant_float(item):
     """ constant    : FLOAT_CONSTANT
     """
-    p[0] = SynTree.Constant(
-        'float', p[1], )
+    item[0] = SynTree.Constant(
+        'float', item[1], )
 
-def p_bool_constant(p):
+def p_bool_constant(item):
     """ constant    : BOOL_CONSTANT
     """
-    p[0] = SynTree.Constant(
-        'bool', p[1], )
+    item[0] = SynTree.Constant(
+        'bool', item[1], )
 
-def p_constant_expression(p):
+def p_constant_expression(item):
     """ constant_expression : conditional_expression """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_variable_direct(p):
+def p_variable_direct(item):
     """ variable  : direct_variable
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_variable_pd(p):
+def p_variable_pd(item):
     """ variable  : pointer direct_variable
     """
-    p[0] = handle_decl_change(p[2], p[1])
+    item[0] = handle_decl_change(item[2], item[1])
 
-def p_specifier_qualifier_list_ts(p):
+def p_specifier_qualifier_list_ts(item):
     """ specifier_qualifier_list    : type specifier_qualifier_list_orempty
     """
-    if p[2]:
-        p[2]['spec'].insert(0, p[1])
-        p[0] = p[2]
+    if item[2]:
+        item[2]['spec'].insert(0, item[1])
+        item[0] = item[2]
     else:
-        p[0] = dict(qual=[], spec=[p[1]])
+        item[0] = dict(qual=[], spec=[item[1]])
 
 
 # 直接声明
-def p_direct_variable_1(p):
+def p_direct_variable_1(item):
     """ direct_variable   : identifier
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_direct_variable_3(p):
+def p_direct_variable_3(item):
     """ direct_variable   : direct_variable '[' assignable_expression_orempty ']'
     """
-    # print(3,p[3])
-    args={'dim':p[3]}
+    # print(3,item[3])
+    args={'dim':item[3]}
     arr = SynTree.DeclArray(**args)
 
-    p[0] = handle_decl_change(p[1], arr)
+    item[0] = handle_decl_change(item[1], arr)
 
-def p_direct_variable_6(p):
+def p_direct_variable_6(item):
     """ direct_variable   : direct_variable '(' parameter_list ')'
                             | direct_variable '(' identifier_list_orempty ')'
     """
-    args={'args':p[3]}
+    args={'args':item[3]}
     func = SynTree.DeclFunction(**args)
 
-    p[0] = handle_decl_change(p[1], func)
+    item[0] = handle_decl_change(item[1], func)
 
-def p_external_declaration_1(p):
+def p_external_declaration_1(item):
     """ external_declaration    : function_definition
     """
-    p[0] = [p[1]]
+    item[0] = [item[1]]
 
-def p_external_declaration_2(p):
+def p_external_declaration_2(item):
     """ external_declaration    : declaration
     """
-    p[0] = p[1]
+    item[0] = item[1]
     
     
 
 
 # 表达式
-def p_expression(p):
+def p_expression(item):
     """ expression  : assignable_expression
                     | expression ',' assignable_expression
     """
-    if len(p) == 2:
-        p[0] = p[1]
+    num=len(item)
+    if num != 2:
+        if not isinstance(item[1], SynTree.ContentList):
+            item[1] = SynTree.ContentList(listType='ExprList', elements=[item[1]])
+        item[1].elements.append(item[3])
+        item[0] = item[1]
     else:
-        if not isinstance(p[1], SynTree.ContentList):
-            p[1] = SynTree.ContentList(listType='ExprList', elements=[p[1]])
+        item[0] = item[1]
 
-        p[1].elements.append(p[3])
-        p[0] = p[1]
 
-def p_expression_statement(p):
+def p_expression_statement(item):
     """ expression_statement : expression_orempty ';' """
-    if p[1] is None:
-        p[0] = SynTree.ControlLogic(logicType='EmptyStatement')
+    if item[1] is None:
+        item[0] = SynTree.ControlLogic(logicType='EmptyStatement')
     else:
-        p[0] = p[1]
+        item[0] = item[1]
 
-def p_function_definition(p):
+def p_function_definition(item):
     """ function_definition : type variable declaration_list_orempty funcbody_statement
     """
     #variale is func(int a, int b, ...)
-    decl_spec = p[1]
+    decl_spec = item[1]
     struct = None
     if isinstance(decl_spec['spec'][0], SynTree.Struct):
         struct = decl_spec['spec'][0]
-    type = p[2]
+    type = item[2]
 
     if struct is not None:
-        if isinstance(type, SynTree.Identifier):
+        if isinstance(type, SynTree.Id):
             args={'name':type.name,'quals':decl_spec['qual'],'spec':decl_spec['spec'],'type':struct,'init':None}
             declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type.type, SynTree.Identifier):
+            while not isinstance(type.type, SynTree.Id):
                 type = type.type
             declname = type.type.name
             type.type = struct
-            args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
+            args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': item[2],
                    'init': None}
             declaration = SynTree.Decl(**args)
 
     else:
-        while not isinstance(type, SynTree.Identifier):
+        while not isinstance(type, SynTree.Id):
             type = type.type
         type.spec = decl_spec['spec']
-        args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': p[2],
+        args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'], 'type': item[2],
                'init': None}
         declaration = SynTree.Decl(**args)
 
-    fun_args = {'decl': declaration, 'param_decls': p[3], 'body': p[4]}
-    p[0] = SynTree.FuncDef(**fun_args)
+    fun_args = {'decl': declaration, 'param_decls': item[3], 'body': item[4]}
+    item[0] = SynTree.FuncDef(**fun_args)
 
 
 
-def p_parameter_list(p):
+def p_parameter_list(item):
     """ parameter_list  : parameter_declaration
                         | parameter_list ',' parameter_declaration
     """
-    if len(p) == 2:
-        p[0] = SynTree.ContentList(listType='ParamList', elements=[p[1]])
+    if len(item) == 2:
+        item[0] = SynTree.ContentList(listType='ParamList', elements=[item[1]])
     else:
-        p[1].elements.append(p[3])
-        p[0] = p[1]
+        item[1].elements.append(item[3])
+        item[0] = item[1]
 
-def p_parameter_declaration(p):
+def p_parameter_declaration(item):
     """ parameter_declaration   : type variable
     """
-    decl_spec = p[1]
+    decl_spec = item[1]
     struct = None
     if isinstance(decl_spec['spec'][0], SynTree.Struct):
         struct = decl_spec['spec'][0]
-    type = p[2]
+    type = item[2]
 
     if struct is not None:
-        if isinstance(type, SynTree.Identifier):
+        if isinstance(type, SynTree.Id):
             args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
                    'type': struct,
                    'init': None}
             declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type.type, SynTree.Identifier):
+            while not isinstance(type.type, SynTree.Id):
                 type = type.type
             declname = type.type.name
             type.type = struct
             args = {'name': declname, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
-                   'type': p[2],
+                   'type': item[2],
                    'init': None}
             declaration = SynTree.Decl(**args)
     else:
-        while not isinstance(type, SynTree.Identifier):
+        while not isinstance(type, SynTree.Id):
             type = type.type
         type.spec = decl_spec['spec']
         args = {'name': type.name, 'quals': decl_spec['qual'], 'spec': decl_spec['spec'],
-               'type': p[2],
+               'type': item[2],
                'init': None}
         declaration = SynTree.Decl(**args)
 
-    p[0] = declaration
+    item[0] = declaration
 
 #usdc: unit, subscript, func call, depoint
-def p_uscd_expression_1(p):
+def p_uscd_expression_1(item):
     """ uscd_expression : unit_expression """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_uscd_expression_2(p):
+def p_uscd_expression_2(item):
     """ uscd_expression : uscd_expression '[' expression ']' """
-    #p[0] = SynTree.ArrayRef(p[1], p[3])
-    args = {'subscript': p[3]}
-    p[0] = SynTree.Ref(refType='ArrayRef', name=p[1], **args)
+    #item[0] = SynTree.ArrayRef(item[1], item[3])
+    args = {'subscript': item[3]}
+    item[0] = SynTree.Ref(refType='ArrayRef', name=item[1], **args)
 
-def p_uscd_expression_3(p):
+def p_uscd_expression_3(item):
     """ uscd_expression : uscd_expression '(' arg_value_exp_list ')'
                             | uscd_expression '(' ')'
     """
-    if len(p) == 5:
-        args = {'name': p[1], 'args': p[3]}
+    if len(item) == 5:
+        args = {'name': item[1], 'args': item[3]}
     else:
-        args = {'name': p[1], 'args': None}
-    p[0] = SynTree.FunctionCall(**args)
+        args = {'name': item[1], 'args': None}
+    item[0] = SynTree.FunctionCall(**args)
 
-def p_uscd_expression_4(p):
+def p_uscd_expression_4(item):
     """ uscd_expression : uscd_expression PTR_OP identifier
     """
-    args1 = {'name': p[3], 'spec': None}
-    field = SynTree.Identifier(**args1)
-    args={'type':p[2],'field':field}
-    p[0] = SynTree.Ref(refType='StructRef',name=p[1], **args)
+    args1 = {'name': item[3], 'spec': None}
+    field = SynTree.Id(**args1)
+    args={'type':item[2],'field':field}
+    item[0] = SynTree.Ref(refType='StructRef',name=item[1], **args)
 
-def p_unit_expression_id(p):
+def p_unit_expression_id(item):
     """ unit_expression  : identifier """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_unit_expression_const(p):
+def p_unit_expression_const(item):
     """ unit_expression  : constant """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_unit_expression_mstring(p):
+def p_unit_expression_mstring(item):
     """ unit_expression  : multiple_string
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_unit_expression_bracket(p):
+def p_unit_expression_bracket(item):
     """ unit_expression  : '(' expression ')' """
-    p[0] = p[2]
+    item[0] = item[2]
     
 
     
@@ -585,96 +586,96 @@ def p_unit_expression_bracket(p):
 
 
 
-def p_branch_statement_if(p):
+def p_branch_statement_if(item):
     """ branch_statement : IF '(' expression ')' statement """
-    args={'judge':p[3], 'action1':p[5], 'action2': None}
-    p[0] = SynTree.ControlLogic('If',**args)
+    args={'judge':item[3], 'action1':item[5], 'action2': None}
+    item[0] = SynTree.ControlLogic('If',**args)
 
-def p_branch_statement_ifelse(p):
+def p_branch_statement_ifelse(item):
     """ branch_statement : IF '(' expression ')' statement ELSE statement """
-    args = {'judge': p[3], 'action1': p[5], 'action2': p[7]}
-    p[0] = SynTree.ControlLogic('If', **args)
+    args = {'judge': item[3], 'action1': item[5], 'action2': item[7]}
+    item[0] = SynTree.ControlLogic('If', **args)
 
 
-def p_loop_statement(p):
+def p_loop_statement(item):
     """ loop_statement : WHILE '(' expression ')' statement """
-    args={'judge':p[3],'action':p[5]}
-    p[0] = SynTree.ControlLogic(logicType='While',**args)
+    args={'judge':item[3],'action':item[5]}
+    item[0] = SynTree.ControlLogic(logicType='While',**args)
 
-def p_loop_statement_2(p):
+def p_loop_statement_2(item):
     """ loop_statement : FOR '(' parameter_declaration ';' expression_orempty ';' expression_orempty ')'  statement
                         | FOR '(' expression ';' expression_orempty ';' expression_orempty ')'  statement
                         | FOR '(' empty ';' expression_orempty ';' expression_orempty ')'  statement
     """
-    args={'first':p[3],'judge':p[5],'action':p[7], 'statement':p[9]}
-    p[0] = SynTree.ControlLogic(logicType='For',**args)
+    args={'first':item[3],'judge':item[5],'action':item[7], 'statement':item[9]}
+    item[0] = SynTree.ControlLogic(logicType='For',**args)
     
-def p_loop_statement_3(p):
+def p_loop_statement_3(item):
     """ loop_statement : FOR '(' parameter_declaration '=' expression ';' expression_orempty ';' expression_orempty ')'  statement
     """
-    args={'first':p[3],'judge':p[7],'action':p[9], 'statement':p[11]}
-    p[0] = SynTree.ControlLogic(logicType='For',**args)
+    args={'first':item[3],'judge':item[7],'action':item[9], 'statement':item[11]}
+    item[0] = SynTree.ControlLogic(logicType='For',**args)
 
 
-def p_statement(p):
+def p_statement(item):
     """ statement   : funcbody_statement
                     | branch_statement
                     | expression_statement
                     | loop_statement
                     | back_statement
     """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_struct_specifier_1(p):
+def p_struct_specifier_1(item):
     """ struct_specifier   : STRUCT identifier
     """
-    p[0] = SynTree.Struct(
-        name=p[2].name,
+    item[0] = SynTree.Struct(
+        name=item[2].name,
         decls=None)
 
-def p_struct_specifier_2(p):
+def p_struct_specifier_2(item):
     """ struct_specifier : STRUCT '{' struct_declaration_list '}'
     """
-    p[0] = SynTree.Struct(
+    item[0] = SynTree.Struct(
         name=None,
-        decls=p[3])
+        decls=item[3])
 
-def p_initializer_list_orempty(p):
+def p_initializer_list_orempty(item):
     """initializer_list_orempty : empty
                             | initializer_list
     """
-    p[0] = p[1]
-def p_struct_specifier_3(p):
+    item[0] = item[1]
+def p_struct_specifier_3(item):
     """ struct_specifier   : STRUCT identifier '{' struct_declaration_list '}'
     """
-    p[0] = SynTree.Struct(
-        name=p[2].name,
-        decls=p[4])
+    item[0] = SynTree.Struct(
+        name=item[2].name,
+        decls=item[4])
 
 # Combine all declarations into a single list
 #
-def p_struct_declaration_list(p):
+def p_struct_declaration_list(item):
     """ struct_declaration_list     : struct_declaration
                                     | struct_declaration_list struct_declaration
     """
-    if len(p) == 2:
-        p[0] = p[1] or []
+    if len(item) == 2:
+        item[0] = item[1] or []
     else:
-        p[0] = p[1] + (p[2] or [])
+        item[0] = item[1] + (item[2] or [])
 
-def p_struct_declaration(p):
+def p_struct_declaration(item):
     """ struct_declaration : type struct_variable_list ';'
     """
-    p[0] = []
-    struct_decl_list = p[2]
-    spec_qual = p[1]
+    item[0] = []
+    struct_decl_list = item[2]
+    spec_qual = item[1]
     struct = None
     if isinstance(spec_qual['spec'][0], SynTree.Struct):
         struct = spec_qual['spec'][0]
 
     for decl in struct_decl_list:
         type = decl
-        while not isinstance(type, SynTree.Identifier):
+        while not isinstance(type, SynTree.Id):
             type = type.type
         if struct is not None:
             type.type = struct
@@ -686,33 +687,33 @@ def p_struct_declaration(p):
                'type': decl,
                'init': None}
         declaration = SynTree.Decl(**args)
-        p[0].insert(0, declaration)
+        item[0].insert(0, declaration)
 
 
-def p_struct_variable_list(p):
+def p_struct_variable_list(item):
     """ struct_variable_list  : variable
                                 | struct_variable_list ',' variable
     """
-    p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
+    item[0] = item[1] + [item[3]] if len(item) == 4 else [item[1]]
 
 
-def p_pointer(p):
+def p_pointer(item):
     """ pointer : '*'
                 | '*' pointer
     """
-    args={'quals':p[1]}
+    args={'quals':item[1]}
     type_ = SynTree.DeclPointer(**args or [])
-    if len(p) > 2:
-        tail = p[2]
+    if len(item) > 2:
+        tail = item[2]
         while tail.type is not None:
             tail = tail.type
         tail.type = type_
-        p[0] = p[2]
+        item[0] = item[2]
     else:
-        p[0] = type_
+        item[0] = type_
 
 # 一元运算
-def p_unary_operator(p):
+def p_unary_operator(item):
     ''' unary_operator : '&'
                        | '*'
                        | '+'
@@ -721,44 +722,44 @@ def p_unary_operator(p):
                        | '!' 
                        '''
                        
-    p[0] = p[1]
+    item[0] = item[1]
     
-def p_self_incdec_op(p):
+def p_self_incdec_op(item):
     ''' self_incdec :   INC_OP
                        | DEC_OP
     '''
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_unary_expression_1(p):
+def p_unary_expression_1(item):
     """ unary_expression    : uscd_expression"""
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_unary_expression_2(p):
+def p_unary_expression_2(item):
     """ unary_expression    : unary_operator cast_expression
                             | self_incdec cast_expression
     """
-    args={'expression':p[2]}
-    p[0] = SynTree.Operation(OpType='UnaryOp',OpName=p[1],**args)
+    args={'expression':item[2]}
+    item[0] = SynTree.Operation(OpType='UnaryOp',OpName=item[1],**args)
     
-def p_unary_expression_3(p):
+def p_unary_expression_3(item):
     """ unary_expression    : cast_expression self_incdec 
     """
-    args={'expression':p[1]}
-    p[0] = SynTree.Operation(OpType='UnaryOp',OpName=p[2],**args)
+    args={'expression':item[1]}
+    item[0] = SynTree.Operation(OpType='UnaryOp',OpName=item[2],**args)
     
 
-def p_multiple_string(p):
+def p_multiple_string(item):
     """ multiple_string  : STRING_CONSTANT
                                 | multiple_string STRING_CONSTANT
     """
-    if len(p) == 2:
-        p[0] = SynTree.Constant(
-            'string', p[1])
+    if len(item) == 2:
+        item[0] = SynTree.Constant(
+            'string', item[1])
     else:
-        p[1].content = p[1].content[:-1] + p[2][1:]
-        p[0] = p[1]
+        item[1].content = item[1].content[:-1] + item[2][1:]
+        item[0] = item[1]
 
-def p_binary_expression(p):
+def p_binary_expression(item):
     """ binary_expression   : cast_expression
                             | binary_expression '*' binary_expression
                             | binary_expression '/' binary_expression
@@ -779,28 +780,28 @@ def p_binary_expression(p):
                             | binary_expression AND_OP binary_expression
                             | binary_expression OR_OP binary_expression
     """
-    if len(p) == 2:
-        p[0] = p[1]
+    if len(item) == 2:
+        item[0] = item[1]
     else:
-        args={'left':p[1],'right':p[3]}
-        p[0] = SynTree.Operation(OpType='BinaryOp',OpName=p[2],**args)
+        args={'left':item[1],'right':item[3]}
+        item[0] = SynTree.Operation(OpType='BinaryOp',OpName=item[2],**args)
 
-def p_cast_expression_1(p):
+def p_cast_expression_1(item):
     """ cast_expression : unary_expression """
-    p[0] = p[1]
+    item[0] = item[1]
 
-def p_comment(p):
+def p_comment(item):
     """  
         comment : COMMENT1
                 | COMMENT2
     """
-    p[0]=SynTree.CommentNode(p[1])
+    item[0]=SynTree.CommentNode(item[1])
     
 
 
 
 # C++相比C多出的特性，因为没有用到，暂时没有处理
-def p_cpp_advanced(p):
+def p_cpp_advanced(item):
     """ cpp_advanced : ASM
     | BUILT_IN_FUNCTION
     | CATCH
@@ -849,13 +850,13 @@ def p_cpp_advanced(p):
     | DEC_OP
     | DEFAULT
     """
-    #p[0]=MidNode('cpp_advanced',p[1:])
+    #item[0]=MidNode('cpp_advanced',item[1:])
     pass
 
 
     
 
-def p_error(p):
+def p_error(item):
     #print('Syntax error of %s type in line %d, lexpos - %d: %s' % (p.type, p.lineno, p.lexpos, p.value))
     if p:
         print('Syntax error of token %s in line %d' % (p.type, p.lineno))
@@ -874,23 +875,19 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:  # specify file
         pretreatmenter=Pretreatment()
-        file_data, ok=pretreatmenter.Pretreatment(sys.argv[1])
-        if not ok:
-            print('pretreatment error')
-        else:
-            result = parser.parse(file_data, lexer=lexer)
-            # print(result.__str__())
+        cooked_file, ok=pretreatmenter.Pretreatment(sys.argv[1])
+        if ok:
+            result = parser.parse(cooked_file, lexer=lexer)
             ast_dict = result.generate_syntree()
-            tree = json.dumps(ast_dict, indent=4)
-            save_path = sys.argv[1][:-len('.cpp')]+'_syntree.json'
+            syntax_tree = json.dumps(ast_dict, indent=4)
+            tree_path = sys.argv[1][:-len('.cpp')]+'_syntree.json'
             if len(sys.argv) > 2:
-                save_path = sys.argv[2]
-            with open(save_path, 'w+',encoding='utf-8') as f:
-                #f.write(buf)
-                f.write(str(tree))
-            # print(tree)
-            print("results is saved at {}.".format(save_path))
-
+                tree_path = sys.argv[2]
+            with open(tree_path, 'w+',encoding='utf-8') as f:
+                f.write(str(syntax_tree))
+            print("tree generated at {}.".format(tree_path))
+        else:
+            print('pretreatment error')
     else:
-        print("please input c++ file path")
+        print("only c++ file is feasible")
 
