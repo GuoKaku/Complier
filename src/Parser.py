@@ -9,7 +9,16 @@ from utility import handle_decl_change
 #simply pass the argument from right to
 def pass_arg(item):
     item[0]=item[1]
-
+    
+def to_id(type, first=False):
+    if first:
+        while not isinstance(type, SynTree.Id):
+            type = type.type
+    else:
+        while not isinstance(type.type, SynTree.Id):
+            type = type.type
+        
+    return type
 
 def p_starter(item):
     """ start   : part
@@ -93,15 +102,12 @@ def p_type(item):
                                 | uorus
                                 | uorus type_specifier_can_unsigned
     """
-    if len(item)<=2:
-        item[0] = dict(qual=list(), spec=[item[1]])
-    else:
-        tmp = item[1] + item[2]
-        item[0] = dict(qual=list(), spec=[tmp])
+    temp = item[1]  if len(item)<=2 else item[1] + item[2]
+    item[0] = dict()
+    item[0]['qual']=list()
+    item[0]['spec']=[temp]
 
         
-
-
 def p_type_specifier(item):
     '''type_specifier : type_specifier_cannot_unsigned
                         | type_specifier_can_unsigned
@@ -140,12 +146,12 @@ def p_declaration_list_orempty(item):
 def p_declaration(item):
     """ declaration : type variable_initable_list_orempty ';'
     """
-    decl_spec = item[1]
-    struct = None
-    if isinstance(decl_spec['spec'][0], SynTree.Struct):
-        struct = decl_spec['spec'][0]
-    init_decl_list = item[2]
 
+    decl_spec = item[1]
+    init_decl_list = item[2]
+    decl_poth = decl_spec['spec']
+    struct = decl_poth[0] if  isinstance(decl_poth[0], SynTree.Struct) else None
+    
     item[0] = list()
 
     for init_decl in init_decl_list:
@@ -155,35 +161,33 @@ def p_declaration(item):
                 args = dict()
                 args['quals']=decl_spec['qual']
                 args['name']=type.name
-                args['spec']=decl_spec['spec']
+                args['spec']=decl_poth
                 args['type']=struct
                 args['init']=init_decl['init']
 
                 declaration = SynTree.Decl(**args)
 
             else:
-                while not isinstance(type.type, SynTree.Id):
-                    type = type.type
+                type=to_id(type)
                 declname = type.type.name
                 type.type = struct
                 
                 args = dict()
                 args['quals']=decl_spec['qual']
                 args['name']=declname
-                args['spec']=decl_spec['spec']
+                args['spec']=decl_poth
                 args['type']=init_decl['type']
                 args['init']=None
 
                 
                 declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type, SynTree.Id):
-                type = type.type
-            type.spec = decl_spec['spec']
+            type=to_id(type,True)
+            type.spec = decl_poth
             args = dict()
             args['quals']=decl_spec['qual']
             args['name']=type.name
-            args['spec']=decl_spec['spec']
+            args['spec']=decl_poth
             args['type']=init_decl['type']
             args['init']=init_decl['init']
            
@@ -475,43 +479,39 @@ def p_function_definition(item):
     """
     #variale is func(int a, int b, ...)
     decl_spec = item[1]
-    struct = None
-    if isinstance(decl_spec['spec'][0], SynTree.Struct):
-        struct = decl_spec['spec'][0]
     type = item[2]
-
-
+    decl_poth = decl_spec['spec']
+    struct = decl_poth[0] if  isinstance(decl_poth[0], SynTree.Struct) else None
+    
     args = dict()
     args['quals']=decl_spec['qual']
-    args['spec']=decl_spec['spec']
+    args['spec']=decl_poth
     args['init']=None
     if struct :
-      
         if isinstance(type, SynTree.Id):
             args['name']=type.name
             args['type']=struct
-
             declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type.type, SynTree.Id):
-                type = type.type
+            type=to_id(type)
             declname = type.type.name
             type.type = struct
             args['name']=declname
             args['type']=item[2]
             declaration = SynTree.Decl(**args)
-
-
     else:
-        while not isinstance(type, SynTree.Id):
-            type = type.type
-        type.spec = decl_spec['spec']
+        type=to_id(type,True)
+        type.spec = decl_poth
         args['name']=type.name
         args['type']=item[2]
 
         declaration = SynTree.Decl(**args)
 
-    fun_args = {'decl': declaration, 'param_args': item[3], 'body': item[4]}
+    fun_args = dict()
+    fun_args['decl'] = declaration
+    fun_args['param_args'] = item[3]
+    fun_args['body'] = item[4]
+
     item[0] = SynTree.FuncDef(**fun_args)
 
 
@@ -530,12 +530,12 @@ def p_parameter_list(item):
 def p_parameter_declaration(item):
     """ parameter_declaration   : type variable
     """
+    
     decl_spec = item[1]
-    decl_poth=decl_spec['spec']
-    struct = None
-    if isinstance(decl_poth[0], SynTree.Struct):
-        struct = decl_poth[0]
     type = item[2]
+    decl_poth = decl_spec['spec']
+    struct = decl_poth[0] if  isinstance(decl_poth[0], SynTree.Struct) else None
+    
 
     args=dict()
     args['quals']=decl_spec['qual']
@@ -548,8 +548,7 @@ def p_parameter_declaration(item):
 
             declaration = SynTree.Decl(**args)
         else:
-            while not isinstance(type.type, SynTree.Id):
-                type = type.type
+            type=to_id(type)
             declname = type.type.name
             type.type = struct
             args['name']=declname
@@ -557,8 +556,7 @@ def p_parameter_declaration(item):
 
             declaration = SynTree.Decl(**args)
     else:
-        while not isinstance(type, SynTree.Id):
-            type = type.type
+        type=to_id(type,True)
         type.spec = decl_poth
         args['name']=type.name
         args['type']=item[2]
@@ -629,7 +627,7 @@ def p_branch_statement_if(item):
     args['judge']=item[3]
     args['action1']=item[5]
     args['action2']=None
-    args={'judge':item[3], 'action1':item[5], 'action2': None}
+
     item[0] = SynTree.ControlLogic('If',**args)
 
 def p_branch_statement_ifelse(item):
@@ -685,16 +683,12 @@ def p_statement(item):
 def p_struct_specifier_1(item):
     """ struct_specifier   : STRUCT identifier
     """
-    item[0] = SynTree.Struct(
-        name=item[2].name,
-        args=None)
+    item[0] = SynTree.Struct(name=item[2].name,args=None)
 
 def p_struct_specifier_2(item):
     """ struct_specifier : STRUCT '{' struct_declaration_list '}'
     """
-    item[0] = SynTree.Struct(
-        name=None,
-        args=item[3])
+    item[0] = SynTree.Struct(name=None,args=item[3])
 
 def p_initializer_list_orempty(item):
     """initializer_list_orempty : empty
@@ -705,9 +699,7 @@ def p_initializer_list_orempty(item):
 def p_struct_specifier_3(item):
     """ struct_specifier   : STRUCT identifier '{' struct_declaration_list '}'
     """
-    item[0] = SynTree.Struct(
-        name=item[2].name,
-        args=item[4])
+    item[0] = SynTree.Struct(name=item[2].name,args=item[4])
 
 # Combine all declarations into a single list
 #
@@ -726,26 +718,27 @@ def p_struct_declaration(item):
     """ struct_declaration : type struct_variable_list ';'
     """
     item[0] = list()
+
+    
+    decl_spec = item[1]
     struct_decl_list = item[2]
-    spec_qual = item[1]
-    struct = None
-    if isinstance(spec_qual['spec'][0], SynTree.Struct):
-        struct = spec_qual['spec'][0]
+    decl_poth = decl_spec['spec']
+    struct = decl_poth[0] if  isinstance(decl_poth[0], SynTree.Struct) else None
+    
 
     for decl in struct_decl_list:
         type = decl
-        while not isinstance(type, SynTree.Id):
-            type = type.type
+        type=to_id(type,True)
         if struct :
             type.type = struct
             declname = type.type.name
         else:
-            type.spec = spec_qual['spec']
+            type.spec = decl_poth
             declname = type.name
         args = dict()
         args['name'] = declname
-        args['quals'] = spec_qual['qual']
-        args['spec'] = spec_qual['spec']
+        args['quals'] = decl_spec['qual']
+        args['spec'] = decl_poth
         args['type'] = decl
         args['init'] = None
 
