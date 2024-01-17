@@ -103,312 +103,309 @@ Rule 82    expression_orempty -> expression
 Rule 83    funcbody_statement -> { block_item_list_orempty }
 Rule 84    conditional_expression -> binary_expression
 Rule 85    conditional_expression -> ternary_expression
-Rule 86    constant -> INTEGER_CONST
-Rule 87    constant -> CHAR_CONST
-Rule 88    constant -> FLOAT_CONST
-Rule 89    constant -> BOOL_CONST
-Rule 90    constant_expression -> conditional_expression
-Rule 91    variable -> direct_variable
-Rule 92    variable -> pointer direct_variable
-Rule 93    specifier_qualifier_list -> type specifier_qualifier_list_orempty
-Rule 94    direct_variable -> identifier
-Rule 95    direct_variable -> direct_variable [ assignable_expression_orempty ]
-Rule 96    direct_variable -> direct_variable ( parameter_list )
-Rule 97    direct_variable -> direct_variable ( identifier_list_orempty )
-Rule 98    external_declaration -> function_definition
-Rule 99    external_declaration -> declaration
-Rule 100   expression -> assignable_expression
-Rule 101   expression -> expression , assignable_expression
-Rule 102   expression_statement -> expression_orempty ;
-Rule 103   function_definition -> type variable declaration_list_orempty funcbody_statement
-Rule 104   parameter_list -> parameter_declaration
-Rule 105   parameter_list -> parameter_list , parameter_declaration
-Rule 106   parameter_declaration -> type variable
-Rule 107   uscd_expression -> unit_expression
-Rule 108   uscd_expression -> uscd_expression [ expression ]
-Rule 109   uscd_expression -> uscd_expression ( arg_value_exp_list )
-Rule 110   uscd_expression -> uscd_expression ( )
-Rule 111   uscd_expression -> uscd_expression PTR_OP identifier
-Rule 112   unit_expression -> identifier
-Rule 113   unit_expression -> constant
-Rule 114   unit_expression -> multiple_string
-Rule 115   unit_expression -> ( expression )
-Rule 116   branch_statement -> IF ( expression ) statement
-Rule 117   branch_statement -> IF ( expression ) statement ELSE statement
-Rule 118   loop_statement -> WHILE ( expression ) statement
-Rule 119   loop_statement -> FOR ( parameter_declaration ; expression_orempty ; expression_orempty ) statement
-Rule 120   loop_statement -> FOR ( expression ; expression_orempty ; expression_orempty ) statement
-Rule 121   loop_statement -> FOR ( empty ; expression_orempty ; expression_orempty ) statement
-Rule 122   loop_statement -> FOR ( parameter_declaration = expression ; expression_orempty ; expression_orempty ) statement
-Rule 123   statement -> funcbody_statement
-Rule 124   statement -> branch_statement
-Rule 125   statement -> expression_statement
-Rule 126   statement -> loop_statement
-Rule 127   statement -> back_statement
-Rule 128   struct_specifier -> STRUCT identifier
-Rule 129   struct_specifier -> STRUCT { struct_declaration_list }
-Rule 130   initializer_list_orempty -> empty
-Rule 131   initializer_list_orempty -> initializer_list
-Rule 132   struct_specifier -> STRUCT identifier { struct_declaration_list }
-Rule 133   struct_declaration_list -> struct_declaration
-Rule 134   struct_declaration_list -> struct_declaration_list struct_declaration
-Rule 135   struct_declaration -> type struct_variable_list ;
-Rule 136   struct_variable_list -> variable
-Rule 137   struct_variable_list -> struct_variable_list , variable
-Rule 138   pointer -> *
-Rule 139   pointer -> * pointer
-Rule 140   unary_operator -> &
-Rule 141   unary_operator -> *
-Rule 142   unary_operator -> +
-Rule 143   unary_operator -> -
-Rule 144   unary_operator -> ~
-Rule 145   unary_operator -> !
-Rule 146   self_incdec -> INC_OP
-Rule 147   self_incdec -> DEC_OP
-Rule 148   unary_expression -> uscd_expression
-Rule 149   unary_expression -> unary_operator cast_expression
-Rule 150   unary_expression -> self_incdec cast_expression
-Rule 151   unary_expression -> cast_expression self_incdec
-Rule 152   multiple_string -> STRING_CONST
-Rule 153   multiple_string -> multiple_string STRING_CONST
-Rule 154   binary_expression -> cast_expression
-Rule 155   binary_expression -> binary_expression * binary_expression
-Rule 156   binary_expression -> binary_expression / binary_expression
-Rule 157   binary_expression -> binary_expression % binary_expression
-Rule 158   binary_expression -> binary_expression + binary_expression
-Rule 159   binary_expression -> binary_expression - binary_expression
-Rule 160   binary_expression -> binary_expression RIGHT_OP binary_expression
-Rule 161   binary_expression -> binary_expression LEFT_OP binary_expression
-Rule 162   binary_expression -> binary_expression < binary_expression
-Rule 163   binary_expression -> binary_expression LTE binary_expression
-Rule 164   binary_expression -> binary_expression GTE binary_expression
-Rule 165   binary_expression -> binary_expression > binary_expression
-Rule 166   binary_expression -> binary_expression EQ_OP binary_expression
-Rule 167   binary_expression -> binary_expression NEQ_OP binary_expression
-Rule 168   binary_expression -> binary_expression & binary_expression
-Rule 169   binary_expression -> binary_expression | binary_expression
-Rule 170   binary_expression -> binary_expression ^ binary_expression
-Rule 171   binary_expression -> binary_expression AND_OP binary_expression
-Rule 172   binary_expression -> binary_expression OR_OP binary_expression
-Rule 173   cast_expression -> unary_expression
-Rule 174   comment -> COMMENT1
-Rule 175   comment -> COMMENT2
-Rule 176   cpp_advanced -> ASM
-Rule 177   cpp_advanced -> BUILT_IN_FUNCTION
-Rule 178   cpp_advanced -> CATCH
-Rule 179   cpp_advanced -> CLASS
-Rule 180   cpp_advanced -> COMMENT2
-Rule 181   cpp_advanced -> CONST_CAST
-Rule 182   cpp_advanced -> DELETE
-Rule 183   cpp_advanced -> DYNAMIC_CAST
-Rule 184   cpp_advanced -> EXPLICIT
-Rule 185   cpp_advanced -> EXPORT
-Rule 186   cpp_advanced -> FRIEND
-Rule 187   cpp_advanced -> MUTABLE
-Rule 188   cpp_advanced -> NAMESPACE
-Rule 189   cpp_advanced -> NEW
-Rule 190   cpp_advanced -> OPERATOR
-Rule 191   cpp_advanced -> VIRTUAL
-Rule 192   cpp_advanced -> AUTO
-Rule 193   cpp_advanced -> CONST
-Rule 194   cpp_advanced -> DO
-Rule 195   cpp_advanced -> ENUM
-Rule 196   cpp_advanced -> EXTERN
-Rule 197   cpp_advanced -> FOR
-Rule 198   cpp_advanced -> STATIC
-Rule 199   cpp_advanced -> UNION
-Rule 200   cpp_advanced -> VOLATILE
-Rule 201   cpp_advanced -> RESTRICT
-Rule 202   cpp_advanced -> REGISTER
-Rule 203   cpp_advanced -> INLINE
-Rule 204   cpp_advanced -> GOTO
-Rule 205   cpp_advanced -> TYPEDEF
-Rule 206   cpp_advanced -> SWITCH
-Rule 207   cpp_advanced -> CASE
-Rule 208   cpp_advanced -> INC_OP
-Rule 209   cpp_advanced -> DEC_OP
-Rule 210   cpp_advanced -> DEFAULT
+Rule 86    ternary_expression -> expression ? expression : expression
+Rule 87    constant -> INTEGER_CONST
+Rule 88    constant -> CHAR_CONST
+Rule 89    constant -> FLOAT_CONST
+Rule 90    constant -> BOOL_CONST
+Rule 91    constant_expression -> conditional_expression
+Rule 92    variable -> direct_variable
+Rule 93    variable -> pointer direct_variable
+Rule 94    specifier_qualifier_list -> type specifier_qualifier_list_orempty
+Rule 95    expression -> assignable_expression
+Rule 96    expression -> expression , assignable_expression
+Rule 97    expression_statement -> expression_orempty ;
+Rule 98    function_definition -> type variable declaration_list_orempty funcbody_statement
+Rule 99    parameter_list -> parameter_declaration
+Rule 100   parameter_list -> parameter_list , parameter_declaration
+Rule 101   parameter_declaration -> type variable
+Rule 102   uscd_expression -> unit_expression
+Rule 103   uscd_expression -> uscd_expression [ expression ]
+Rule 104   uscd_expression -> uscd_expression ( arg_value_exp_list )
+Rule 105   uscd_expression -> uscd_expression ( )
+Rule 106   uscd_expression -> uscd_expression PTR_OP identifier
+Rule 107   unit_expression -> identifier
+Rule 108   unit_expression -> constant
+Rule 109   unit_expression -> multiple_string
+Rule 110   unit_expression -> ( expression )
+Rule 111   branch_statement -> IF ( expression ) statement
+Rule 112   branch_statement -> IF ( expression ) statement ELSE statement
+Rule 113   loop_statement -> WHILE ( expression ) statement
+Rule 114   loop_statement -> FOR ( parameter_declaration ; expression_orempty ; expression_orempty ) statement
+Rule 115   loop_statement -> FOR ( expression ; expression_orempty ; expression_orempty ) statement
+Rule 116   loop_statement -> FOR ( empty ; expression_orempty ; expression_orempty ) statement
+Rule 117   loop_statement -> FOR ( parameter_declaration = expression ; expression_orempty ; expression_orempty ) statement
+Rule 118   statement -> funcbody_statement
+Rule 119   statement -> branch_statement
+Rule 120   statement -> expression_statement
+Rule 121   statement -> loop_statement
+Rule 122   statement -> back_statement
+Rule 123   struct_specifier -> STRUCT identifier
+Rule 124   struct_specifier -> STRUCT { struct_declaration_list }
+Rule 125   initializer_list_orempty -> empty
+Rule 126   initializer_list_orempty -> initializer_list
+Rule 127   struct_specifier -> STRUCT identifier { struct_declaration_list }
+Rule 128   struct_declaration_list -> struct_declaration
+Rule 129   struct_declaration_list -> struct_declaration_list struct_declaration
+Rule 130   struct_declaration -> type struct_variable_list ;
+Rule 131   struct_variable_list -> variable
+Rule 132   struct_variable_list -> struct_variable_list , variable
+Rule 133   pointer -> *
+Rule 134   pointer -> * pointer
+Rule 135   unary_operator -> &
+Rule 136   unary_operator -> *
+Rule 137   unary_operator -> +
+Rule 138   unary_operator -> -
+Rule 139   unary_operator -> ~
+Rule 140   unary_operator -> !
+Rule 141   self_incdec -> INC_OP
+Rule 142   self_incdec -> DEC_OP
+Rule 143   unary_expression -> uscd_expression
+Rule 144   unary_expression -> unary_operator cast_expression
+Rule 145   unary_expression -> self_incdec cast_expression
+Rule 146   unary_expression -> cast_expression self_incdec
+Rule 147   multiple_string -> STRING_CONST
+Rule 148   multiple_string -> multiple_string STRING_CONST
+Rule 149   binary_expression -> cast_expression
+Rule 150   binary_expression -> binary_expression * binary_expression
+Rule 151   binary_expression -> binary_expression / binary_expression
+Rule 152   binary_expression -> binary_expression % binary_expression
+Rule 153   binary_expression -> binary_expression + binary_expression
+Rule 154   binary_expression -> binary_expression - binary_expression
+Rule 155   binary_expression -> binary_expression RIGHT_OP binary_expression
+Rule 156   binary_expression -> binary_expression LEFT_OP binary_expression
+Rule 157   binary_expression -> binary_expression < binary_expression
+Rule 158   binary_expression -> binary_expression LTE binary_expression
+Rule 159   binary_expression -> binary_expression GTE binary_expression
+Rule 160   binary_expression -> binary_expression > binary_expression
+Rule 161   binary_expression -> binary_expression EQ_OP binary_expression
+Rule 162   binary_expression -> binary_expression NEQ_OP binary_expression
+Rule 163   binary_expression -> binary_expression & binary_expression
+Rule 164   binary_expression -> binary_expression | binary_expression
+Rule 165   binary_expression -> binary_expression ^ binary_expression
+Rule 166   binary_expression -> binary_expression AND_OP binary_expression
+Rule 167   binary_expression -> binary_expression OR_OP binary_expression
+Rule 168   cast_expression -> unary_expression
+Rule 169   comment -> COMMENT1
+Rule 170   comment -> COMMENT2
+Rule 171   cpp_advanced -> ASM
+Rule 172   cpp_advanced -> BUILT_IN_FUNCTION
+Rule 173   cpp_advanced -> CATCH
+Rule 174   cpp_advanced -> CLASS
+Rule 175   cpp_advanced -> COMMENT2
+Rule 176   cpp_advanced -> CONST_CAST
+Rule 177   cpp_advanced -> DELETE
+Rule 178   cpp_advanced -> DYNAMIC_CAST
+Rule 179   cpp_advanced -> EXPLICIT
+Rule 180   cpp_advanced -> EXPORT
+Rule 181   cpp_advanced -> FRIEND
+Rule 182   cpp_advanced -> MUTABLE
+Rule 183   cpp_advanced -> NAMESPACE
+Rule 184   cpp_advanced -> NEW
+Rule 185   cpp_advanced -> OPERATOR
+Rule 186   cpp_advanced -> VIRTUAL
+Rule 187   cpp_advanced -> AUTO
+Rule 188   cpp_advanced -> CONST
+Rule 189   cpp_advanced -> DO
+Rule 190   cpp_advanced -> ENUM
+Rule 191   cpp_advanced -> EXTERN
+Rule 192   cpp_advanced -> FOR
+Rule 193   cpp_advanced -> STATIC
+Rule 194   cpp_advanced -> UNION
+Rule 195   cpp_advanced -> VOLATILE
+Rule 196   cpp_advanced -> RESTRICT
+Rule 197   cpp_advanced -> REGISTER
+Rule 198   cpp_advanced -> INLINE
+Rule 199   cpp_advanced -> GOTO
+Rule 200   cpp_advanced -> TYPEDEF
+Rule 201   cpp_advanced -> SWITCH
+Rule 202   cpp_advanced -> CASE
+Rule 203   cpp_advanced -> INC_OP
+Rule 204   cpp_advanced -> DEC_OP
+Rule 205   cpp_advanced -> DEFAULT
 
 Terminals, with rules where they appear
 
-!                    : 145
-%                    : 157
-&                    : 140 168
-(                    : 96 97 109 110 115 116 117 118 119 120 121 122
-)                    : 96 97 109 110 115 116 117 118 119 120 121 122
-*                    : 138 139 141 155
-+                    : 142 158
-,                    : 9 11 15 43 67 101 105 137
--                    : 143 159
-/                    : 156
-;                    : 37 47 48 49 50 102 119 119 120 120 121 121 122 122 135
-<                    : 162
-=                    : 13 55 122
->                    : 165
+!                    : 140
+%                    : 152
+&                    : 135 163
+(                    : 104 105 110 111 112 113 114 115 116 117
+)                    : 104 105 110 111 112 113 114 115 116 117
+*                    : 133 134 136 150
++                    : 137 153
+,                    : 9 11 15 43 67 96 100 132
+-                    : 138 154
+/                    : 151
+:                    : 86
+;                    : 37 47 48 49 50 97 114 114 115 115 116 116 117 117 130
+<                    : 157
+=                    : 13 55 117
+>                    : 160
+?                    : 86
 ADD_ASG              : 59
 AND_ASG              : 63
-AND_OP               : 171
-ASM                  : 176
-AUTO                 : 192
+AND_OP               : 166
+ASM                  : 171
+AUTO                 : 187
 BOOL                 : 27
-BOOL_CONST           : 89
+BOOL_CONST           : 90
 BREAK                : 47
-BUILT_IN_FUNCTION    : 177
-CASE                 : 207
-CATCH                : 178
+BUILT_IN_FUNCTION    : 172
+CASE                 : 202
+CATCH                : 173
 CHAR                 : 32
-CHAR_CONST           : 87
-CLASS                : 179
-COMMENT1             : 174
-COMMENT2             : 175 180
-CONST                : 193
-CONST_CAST           : 181
+CHAR_CONST           : 88
+CLASS                : 174
+COMMENT1             : 169
+COMMENT2             : 170 175
+CONST                : 188
+CONST_CAST           : 176
 CONTINUE             : 48
-DEC_OP               : 147 209
-DEFAULT              : 210
-DELETE               : 182
+DEC_OP               : 142 204
+DEFAULT              : 205
+DELETE               : 177
 DIV_ASG              : 57
-DO                   : 194
+DO                   : 189
 DOUBLE               : 26
-DYNAMIC_CAST         : 183
-ELSE                 : 117
-ENUM                 : 195
-EQ_OP                : 166
-EXPLICIT             : 184
-EXPORT               : 185
-EXTERN               : 196
+DYNAMIC_CAST         : 178
+ELSE                 : 112
+ENUM                 : 190
+EQ_OP                : 161
+EXPLICIT             : 179
+EXPORT               : 180
+EXTERN               : 191
 FLOAT                : 25
-FLOAT_CONST          : 88
-FOR                  : 119 120 121 122 197
-FRIEND               : 186
-GOTO                 : 204
-GTE                  : 164
+FLOAT_CONST          : 89
+FOR                  : 114 115 116 117 192
+FRIEND               : 181
+GOTO                 : 199
+GTE                  : 159
 ID                   : 44
-IF                   : 116 117
-INC_OP               : 146 208
-INLINE               : 203
+IF                   : 111 112
+INC_OP               : 141 203
+INLINE               : 198
 INT                  : 29
-INTEGER_CONST        : 86
+INTEGER_CONST        : 87
 LEFT_ASG             : 61
-LEFT_OP              : 161
+LEFT_OP              : 156
 LONG                 : 31
-LTE                  : 163
+LTE                  : 158
 MOD_ASG              : 58
 MUL_ASG              : 56
-MUTABLE              : 187
-NAMESPACE            : 188
-NEQ_OP               : 167
-NEW                  : 189
-OPERATOR             : 190
+MUTABLE              : 182
+NAMESPACE            : 183
+NEQ_OP               : 162
+NEW                  : 184
+OPERATOR             : 185
 OR_ASG               : 65
-OR_OP                : 172
+OR_OP                : 167
 PRIVATE              : 
 PROTECTED            : 
-PTR_OP               : 111
+PTR_OP               : 106
 PUBLIC               : 
-REGISTER             : 202
+REGISTER             : 197
 REINTERPRET_CAST     : 
-RESTRICT             : 201
+RESTRICT             : 196
 RETURN               : 49 50
 RIGHT_ASG            : 62
-RIGHT_OP             : 160
+RIGHT_OP             : 155
 SHORT                : 30
 SIGNED               : 33
 SIZEOF               : 46
-STATIC               : 198
+STATIC               : 193
 STATIC_CAST          : 
-STRING_CONST         : 152 153
-STRUCT               : 128 129 132
+STRING_CONST         : 147 148
+STRUCT               : 123 124 127
 SUB_ASG              : 60
-SWITCH               : 206
+SWITCH               : 201
 TEMPLATE             : 
 THIS                 : 
 THROW                : 
 TRY                  : 
-TYPEDEF              : 205
+TYPEDEF              : 200
 TYPEID               : 
 TYPENAME             : 
-UNION                : 199
+UNION                : 194
 UNSIGNED             : 34
 USING                : 
-VIRTUAL              : 191
+VIRTUAL              : 186
 VOID                 : 24
-VOLATILE             : 200
-WHILE                : 118
+VOLATILE             : 195
+WHILE                : 113
 XOR_ASG              : 64
-[                    : 95 108
-]                    : 95 108
-^                    : 170
+[                    : 103
+]                    : 103
+^                    : 165
 error                : 
-{                    : 8 9 83 129 132
-|                    : 169
-}                    : 8 9 83 129 132
-~                    : 144
+{                    : 8 9 83 124 127
+|                    : 164
+}                    : 8 9 83 124 127
+~                    : 139
 
 Nonterminals, with rules where they appear
 
-arg_value_exp_list   : 67 109
+arg_value_exp_list   : 67 104
 assign_operator      : 69
-assignable_expression : 7 52 66 67 69 100 101
-assignable_expression_orempty : 95
-back_statement       : 127
-binary_expression    : 84 155 155 156 156 157 157 158 158 159 159 160 160 161 161 162 162 163 163 164 164 165 165 166 166 167 167 168 168 169 169 170 170 171 171 172 172
+assignable_expression : 7 52 66 67 69 95 96
+assignable_expression_orempty : 
+back_statement       : 122
+binary_expression    : 84 150 150 151 151 152 152 153 153 154 154 155 155 156 156 157 157 158 158 159 159 160 160 161 161 162 162 163 163 164 164 165 165 166 166 167 167
 block_item           : 79 80
 block_item_list      : 71 80
 block_item_list_orempty : 83
-branch_statement     : 124
-cast_expression      : 149 150 151 154
+branch_statement     : 119
+cast_expression      : 144 145 146 149
 comment              : 5 78
-conditional_expression : 68 90
-constant             : 113
+conditional_expression : 68 91
+constant             : 108
 constant_expression  : 73
 constant_expression_orempty : 
 cpp_advanced         : 
-declaration          : 38 39 76 99
+declaration          : 38 39 76
 declaration_list     : 36 39
-declaration_list_orempty : 103
+declaration_list_orempty : 98
 declorcom            : 3 4
-direct_variable      : 91 92 95 96 97
-empty                : 2 35 40 51 53 70 72 74 81 121 130
-expression           : 50 82 101 108 115 116 117 118 120 122
-expression_orempty   : 102 119 119 120 120 121 121 122 122
-expression_statement : 125
+direct_variable      : 92 93
+empty                : 2 35 40 51 53 70 72 74 81 116 125
+expression           : 50 82 86 86 86 96 103 110 111 112 113 115 117
+expression_orempty   : 97 114 114 115 115 116 116 117 117
+expression_statement : 120
 external_declaration : 6
-funcbody_statement   : 103 123
-function_definition  : 98
-identifier           : 42 43 94 111 112 128 132
+funcbody_statement   : 98 118
+function_definition  : 
+identifier           : 42 43 106 107 123 127
 identifier_list      : 41 43
-identifier_list_orempty : 97
+identifier_list_orempty : 
 initializer          : 10 11 13
-initializer_list     : 9 11 131
+initializer_list     : 9 11 126
 initializer_list_orempty : 8
 inlinefunc           : 45
-loop_statement       : 126
-multiple_string      : 114 153
-parameter_declaration : 104 105 119 122
-parameter_list       : 96 105
+loop_statement       : 121
+multiple_string      : 109 148
+parameter_declaration : 99 100 114 117
+parameter_list       : 100
 part                 : 1 3
-pointer              : 92 139
-self_incdec          : 150 151
+pointer              : 93 134
+self_incdec          : 145 146
 specifier_qualifier_list : 75
-specifier_qualifier_list_orempty : 93
+specifier_qualifier_list_orempty : 94
 start                : 0
-statement            : 77 116 117 117 118 119 120 121 122
-struct_declaration   : 133 134
-struct_declaration_list : 129 132 134
+statement            : 77 111 112 112 113 114 115 116 117
+struct_declaration   : 128 129
+struct_declaration_list : 124 127 129
 struct_specifier     : 28
-struct_variable_list : 135 137
+struct_variable_list : 130 132
 ternary_expression   : 85
-type                 : 37 93 103 106 135
+type                 : 37 94 98 101 130
 type_specifier       : 
 type_specifier_can_unsigned : 17 20 22
 type_specifier_cannot_unsigned : 18 21
-unary_expression     : 69 173
-unary_operator       : 149
-unit_expression      : 107
+unary_expression     : 69 168
+unary_operator       : 144
+unit_expression      : 102
 uorus                : 19 20 23
-uscd_expression      : 108 109 110 111 148
-variable             : 12 13 103 106 136 137
+uscd_expression      : 103 104 105 106 143
+variable             : 12 13 98 101 131 132
 variable_initable    : 14 15
 variable_initable_list : 15 54
 variable_initable_list_orempty : 37
