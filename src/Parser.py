@@ -8,7 +8,7 @@ from utility import handle_decl_change
 
 #simply pass the argument from right to
 def pass_arg(item):
-    
+    item[0]=item[1]
 
 
 def p_starter(item):
