@@ -441,7 +441,7 @@ def p_direct_variable_6(item):
 def p_external_declaration_1(item):
     """ external_declaration    : function_definition
     """
-    item[0] = list(item[1])
+    item[0] = [item[1]]
 
 def p_external_declaration_2(item):
     """ external_declaration    : declaration
