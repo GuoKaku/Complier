@@ -39,7 +39,7 @@ def p_part(item):
 def p_decl_or_comment_1(item):
     """ declorcom   : comment
     """
-    item[0] = [item[1]]
+    item[0] = list(item[1])
     
 def p_decl_or_comment_2(item):
     """ declorcom   : external_declaration
@@ -244,14 +244,10 @@ def p_back_statement_return(item):
     """ back_statement  : RETURN ';'
                         | RETURN expression ';'
     """
-    if len(item)==3:
-        args = dict()
-        args["return_result"]= None
-        item[0] = SynTree.ControlLogic(logicType='Return',**args)
-    else:
-        args = dict()
-        args["return_result"]= item[2]
-        item[0] = SynTree.ControlLogic(logicType='Return',**args)
+
+    args = dict()
+    args["return_result"]= item[2] if len(item)>3 else None
+    item[0] = SynTree.ControlLogic(logicType='Return',**args)
 
 
 def p_assignable_expression_orempty(item):
@@ -860,7 +856,6 @@ def p_comment(item):
     """
     item[0]=SynTree.CommentNode(item[1])
     
-
 
 
 # C++相比C多出的特性，因为没有用到，暂时没有处理
